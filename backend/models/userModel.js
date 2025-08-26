@@ -1,4 +1,4 @@
-const db = require("../db/db.js");
+const db = require("../config/db.js");
 
 const addBankAccount = (user_id, bank_account, callback) => {
   const query = "INSERT INTO bank_accounts (user_id, account_number, bank_name , ifsc) VALUES (?, ?, ?, ?)";

@@ -1,4 +1,4 @@
-const { addBankAccount } = require("../models/user.model");
+const { addBankAccount } = require("../models/userModel");
 const addBank = (req, res) => {
   const { user_id, account_number, bank_name, ifsc } = req.body;
 

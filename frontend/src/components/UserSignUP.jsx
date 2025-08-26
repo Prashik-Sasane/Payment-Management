@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
-import HoverPage from '../pages/HoverPage'
+import HoverPage from '../page/HoverPage'
 import RewardsPage from './Reward'
 const appBackgroundStyle = {
   minHeight: "100vh",

@@ -1,5 +1,5 @@
 const express = require("express");
-const {addBank} = require("../controllers/authcontroller")
+const {addBank} = require("../controller/authcontroller")
 const router = express.Router();
 
 router.post("/addbank", addBank);

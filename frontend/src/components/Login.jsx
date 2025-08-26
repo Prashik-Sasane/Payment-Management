@@ -15,7 +15,7 @@ import { ToastContainer, toast } from 'react-toastify';
 import { auth } from "./firebase";
 
 
-export default function AuthPage() {
+export default function Login() {
   const [form, setform] = useState({ email: ""})
   function googleLogin() {
     const provider = new GoogleAuthProvider();
