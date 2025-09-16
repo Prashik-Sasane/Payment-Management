@@ -6,6 +6,7 @@ import SpotlightPreview  from "./SpotlightPreview";
 const appBackgroundStyle = {
   minHeight: "100vh",
   width: "100vw",
+  backgroundColor: "#050505",
   color: "#fafcff",
   position: "relative",
   fontFamily: '"Poppins",sans-serif'
@@ -26,7 +27,7 @@ const SloganSection = () => (
       pointerEvents: "none"
     }}
   >
-    <h1
+    {/* <h1
       style={{
         color: "#fff",
         fontWeight: 700,
@@ -43,7 +44,7 @@ const SloganSection = () => (
       <span style={{ color: "#42b0fe", fontWeight: 600 }}>
         Money moves in a flash.
       </span>
-    </h1>
+    </h1> */}
   </div>
 );
 
