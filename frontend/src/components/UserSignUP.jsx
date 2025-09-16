@@ -2,10 +2,10 @@ import React, { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import HoverPage from '../page/HoverPage'
 import RewardsPage from './Reward'
+import SpotlightPreview  from "./SpotlightPreview";
 const appBackgroundStyle = {
   minHeight: "100vh",
   width: "100vw",
-  backgroundColor: "#050505",
   color: "#fafcff",
   position: "relative",
   fontFamily: '"Poppins",sans-serif'
@@ -161,6 +161,7 @@ const Navbar = () => {
         )}
       </nav>
       <SloganSection />
+      <SpotlightPreview />
     </div>
      <HoverPage />
      <RewardsPage />

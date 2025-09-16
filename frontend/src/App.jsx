@@ -6,6 +6,7 @@ import Payment from './page/Payment'
 import BankTransfer from './page/Banktransfer'
 import Transaction from './page/Transaction'
 import Dashboard from './page/Dashboard'
+import SpotlightPreview from './components/SpotlightPreview'
 import './App.css'
 const App = () => {
   return (
@@ -18,6 +19,7 @@ const App = () => {
         <Route path='/bank' element={<BankTransfer />} />
         <Route path='/transaction' element={<Transaction />} />
         <Route path='/add' element={<Dashboard />} />
+        <Route path='/spotlight' element={<SpotlightPreview />} />
       </Routes>
     </BrowserRouter>
     </div>

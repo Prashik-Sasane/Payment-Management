@@ -1,8 +1,17 @@
 import React from "react";
 
+const appBackgroundStyle = {
+  minHeight: "100vh",
+  width: "100vw",
+  backgroundColor: "#050505",
+  color: "#fafcff",
+  position: "relative",
+  fontFamily: '"Poppins",sans-serif'
+};
+  
 export default function RewardsPage() {
   return (
-    <div className="min-h-screen bg-gray-900 text-gray-300 font-sans p-6 flex flex-col items-center space-y-16">
+    <div style={appBackgroundStyle} className="min-h-screen p-6 flex flex-col items-center space-y-16">
       <h1 className="text-4xl font-bold mt-8 text-gray-100">Cashback & Rewards</h1>
 
       <section className="max-w-4xl w-full bg-gray-800 rounded-xl p-8 shadow-lg flex flex-col md:flex-row items-center md:space-x-12 space-y-8 md:space-y-0">
