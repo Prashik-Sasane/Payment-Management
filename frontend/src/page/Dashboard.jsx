@@ -1,188 +1,604 @@
-import React, { useState } from "react";
-import Transaction from "./Transaction";
-const loadRazorpayScript = () =>
-  new Promise((resolve) => {
-    if (window.Razorpay) resolve(true);
-    else {
-      const script = document.createElement("script");
-      script.src = "https://checkout.razorpay.com/v1/checkout.js";
-      script.onload = () => resolve(true);
-      script.onerror = () => resolve(false);
-      document.body.appendChild(script);
-    }
-  });
+import React, { useState, useEffect } from "react";
+import { useAuth } from "../context/AuthContext";
+import { useNavigate } from "react-router-dom";
+import axios from "axios";
+import { ToastContainer, toast } from 'react-toastify';
+import {
+  Box,
+  Typography,
+  Button,
+  Card,
+  CardContent,
+  Grid,
+  TextField,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Paper,
+  Chip,
+  CircularProgress
+} from "@mui/material";
+import {
+  AccountBalance,
+  Send,
+  Add,
+  History,
+  AccountBalanceWallet,
+  Logout
+} from "@mui/icons-material";
 
-const initialTransactions = [
-  { id: 1, type: "sent", name: "SHREE BALAJI TRADERS", amount: 30, date: new Date("2025-08-24") },
-  { id: 2, type: "sent", name: "Shree Swami Snacks", amount: 45, date: new Date("2025-08-24") },
-  { id: 3, type: "sent", name: "Partha (AIDS)", amount: 120, date: new Date("2025-08-24") },
-  { id: 4, type: "received", name: "ARYA JALINDAR KADAM", amount: 10, date: new Date("2025-08-22") },
-];
-
-export default function Dashboard() {
-  const [section, setSection] = useState("transactions");
-  const [searchTerm, setSearchTerm] = useState("");
-  const [filterDate, setFilterDate] = useState("all");
-  const [paymentLoading, setPaymentLoading] = useState(false);
-  const [transactions, setTransactions] = useState(initialTransactions);
-  const [newTxn, setNewTxn] = useState({ type: "sent", name: "", amount: "", date: "" });
-
+const Dashboard = () => {
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
+  const [activeSection, setActiveSection] = useState("overview");
+  const [loading, setLoading] = useState(false);
+  const [bankAccounts, setBankAccounts] = useState([]);
+  const [transactions, setTransactions] = useState([]);
+  const [transferDialog, setTransferDialog] = useState(false);
+  const [addBankDialog, setAddBankDialog] = useState(false);
+  const [addMoneyDialog, setAddMoneyDialog] = useState(false);
   
-  async function payNow(txn) {
-    const res = await loadRazorpayScript();
-    if (!res) {
-      alert("Failed to load Razorpay SDK");
-      return;
-    }
-    setPaymentLoading(true);
-
-    const options = {
-      key: "rzp_test_R9F8wJS5GfYY6P", 
-      amount: txn.amount * 100,
-      currency: "INR",
-      name: "PayApp",
-      description: txn.name,
-      handler: function (response) {
-        alert("Payment successful with payment ID: " + response.razorpay_payment_id);
-        setTransactions((prev) =>
-          prev.map((t) => (t.id === txn.id ? { ...t, status: "Completed" } : t))
-        );
-      },
-      theme: { color: "#007acc" },
-    };
-
-    const rzp = new window.Razorpay(options);
-    rzp.open();
-    setPaymentLoading(false);
-  }
-
- 
-  const filteredTransactions = transactions.filter((txn) => {
-    const nameMatch = txn.name.toLowerCase().includes(searchTerm.toLowerCase());
-    const now = new Date();
-    let dateMatch = true;
-    if (filterDate === "last7") {
-      const last7 = new Date(now);
-      last7.setDate(now.getDate() - 7);
-      dateMatch = txn.date >= last7;
-    }
-    if (filterDate === "last30") {
-      const last30 = new Date(now);
-      last30.setDate(now.getDate() - 30);
-      dateMatch = txn.date >= last30;
-    }
-    return nameMatch && dateMatch;
+  // Form states
+  const [transferForm, setTransferForm] = useState({
+    receiver_username: "",
+    amount: "",
+    description: "",
+    bank_account_id: ""
+  });
+  const [bankForm, setBankForm] = useState({
+    account_number: "",
+    bank_name: "",
+    ifsc: "",
+    account_holder_name: ""
+  });
+  const [addMoneyForm, setAddMoneyForm] = useState({
+    amount: "",
+    bank_account_id: ""
   });
 
-
-  const handleAddTransaction = (e) => {
-    e.preventDefault();
-    if (!newTxn.name || !newTxn.amount || !newTxn.date) {
-      alert("Please fill in all fields");
+  useEffect(() => {
+    if (!user) {
+      navigate('/login');
       return;
     }
-    setTransactions([{ id: transactions.length + 1, ...newTxn, amount: Number(newTxn.amount), date: new Date(newTxn.date), status: "Pending" }, ...transactions]);
-    setNewTxn({ type: "sent", name: "", amount: "", date: "" });
-    setSection("transactions");
+    fetchBankAccounts();
+    fetchTransactions();
+  }, [user, navigate]);
+
+  const fetchBankAccounts = async () => {
+    try {
+      const response = await axios.get('http://localhost:4000/api/user/banks');
+      setBankAccounts(response.data.accounts);
+    } catch (error) {
+      console.error('Failed to fetch bank accounts:', error);
+    }
+  };
+
+  const fetchTransactions = async () => {
+    try {
+      const response = await axios.get('http://localhost:4000/api/user/transactions');
+      setTransactions(response.data.transactions);
+    } catch (error) {
+      console.error('Failed to fetch transactions:', error);
+    }
+  };
+
+  const handleTransfer = async () => {
+    if (!transferForm.receiver_username || !transferForm.amount) {
+      toast.error('Please fill in all required fields');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const response = await axios.post('http://localhost:4000/api/user/transfer', transferForm);
+      toast.success('Transfer completed successfully!');
+      setTransferDialog(false);
+      setTransferForm({ receiver_username: "", amount: "", description: "", bank_account_id: "" });
+      fetchTransactions();
+      window.location.reload();
+    } catch (error) {
+      toast.error(error.response?.data?.error || 'Transfer failed');
+    }
+    setLoading(false);
+  };
+
+  const handleAddBank = async () => {
+    if (!bankForm.account_number || !bankForm.bank_name || !bankForm.ifsc || !bankForm.account_holder_name) {
+      toast.error('Please fill in all fields');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      await axios.post('http://localhost:4000/api/user/addbank', bankForm);
+      toast.success('Bank account added successfully!');
+      setAddBankDialog(false);
+      setBankForm({ account_number: "", bank_name: "", ifsc: "", account_holder_name: "" });
+      fetchBankAccounts();
+    } catch (error) {
+      toast.error(error.response?.data?.error || 'Failed to add bank account');
+    }
+    setLoading(false);
+  };
+
+  const handleAddMoney = async () => {
+    if (!addMoneyForm.amount || !addMoneyForm.bank_account_id) {
+      toast.error('Please fill in all fields');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      await axios.post('http://localhost:4000/api/user/addmoney', addMoneyForm);
+      toast.success('Money added successfully!');
+      setAddMoneyDialog(false);
+      setAddMoneyForm({ amount: "", bank_account_id: "" });
+      fetchTransactions();
+      window.location.reload();
+    } catch (error) {
+      toast.error(error.response?.data?.error || 'Failed to add money');
+    }
+    setLoading(false);
+  };
+
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
+  };
+
+  const formatDate = (dateString) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
+
+  const getStatusColor = (status) => {
+    switch (status) {
+      case 'completed': return 'success';
+      case 'pending': return 'warning';
+      case 'failed': return 'error';
+      default: return 'default';
+    }
+  };
+
+  const getTransactionType = (transaction) => {
+    if (transaction.sender_id === user.id) {
+      return transaction.receiver_username ? `Sent to ${transaction.receiver_username}` : 'Payment';
+    } else {
+      return `Received from ${transaction.sender_username}`;
+    }
+  };
+
+  const getTransactionAmount = (transaction) => {
+    if (transaction.sender_id === user.id) {
+      return `-₹${transaction.amount}`;
+    } else {
+      return `+₹${transaction.amount}`;
+    }
+  };
+
+  const getAmountColor = (transaction) => {
+    if (transaction.sender_id === user.id) {
+      return 'error.main';
+    } else {
+      return 'success.main';
+    }
   };
 
   return (
-    <div className="flex min-h-screen bg-gray-100 font-sans text-gray-900">
-      <aside className="w-64 bg-gray-900 text-white flex flex-col p-6 space-y-6 shadow-lg">
-        <h2 className="text-3xl font-extrabold tracking-tight text-green-400 border-b border-green-400 mb-8 pb-2">
-          PayApp
-        </h2>
-        {["transactions", "addbank", "banktransfer", "history", "scan"].map((sec) => (
-          <button
-            key={sec}
-            className={`text-xl rounded-md px-4 py-3 text-left transition-colors duration-200 ${
-              section === sec
-                ? "bg-gray-100 text-gray-900 font-bold shadow-lg"
-                : "hover:bg-gray-400 hover:text-white"
-            }`}
-            onClick={() => setSection(sec)}
+    <Box sx={{ display: 'flex', minHeight: '100vh', bgcolor: '#f5f5f5' }}>
+      {/* Sidebar */}
+      <Box sx={{ 
+        width: 280, 
+        bgcolor: '#1a1a1a', 
+        color: 'white',
+        display: 'flex',
+        flexDirection: 'column',
+        p: 3
+      }}>
+        <Box sx={{ mb: 4 }}>
+          <Typography variant="h4" sx={{ fontWeight: 'bold', color: '#4caf50' }}>
+            PayApp
+          </Typography>
+          <Typography variant="body2" sx={{ color: '#888' }}>
+            Welcome, {user?.full_name}
+          </Typography>
+        </Box>
+
+        <Box sx={{ flexGrow: 1 }}>
+          {[
+            { id: 'overview', label: 'Overview', icon: <AccountBalanceWallet /> },
+            { id: 'transfer', label: 'Transfer Money', icon: <Send /> },
+            { id: 'banks', label: 'Bank Accounts', icon: <AccountBalance /> },
+            { id: 'transactions', label: 'Transactions', icon: <History /> },
+            { id: 'addmoney', label: 'Add Money', icon: <Add /> }
+          ].map((item) => (
+            <Button
+              key={item.id}
+              fullWidth
+              startIcon={item.icon}
+              onClick={() => setActiveSection(item.id)}
+              sx={{
+                justifyContent: 'flex-start',
+                mb: 1,
+                color: activeSection === item.id ? '#4caf50' : 'white',
+                bgcolor: activeSection === item.id ? 'rgba(76, 175, 80, 0.1)' : 'transparent',
+                '&:hover': {
+                  bgcolor: 'rgba(255, 255, 255, 0.1)'
+                }
+              }}
+            >
+              {item.label}
+            </Button>
+          ))}
+        </Box>
+
+        <Button
+          fullWidth
+          startIcon={<Logout />}
+          onClick={handleLogout}
+          sx={{
+            justifyContent: 'flex-start',
+            color: '#ff5722',
+            '&:hover': {
+              bgcolor: 'rgba(255, 87, 34, 0.1)'
+            }
+          }}
+        >
+          Logout
+        </Button>
+      </Box>
+
+      {/* Main Content */}
+      <Box sx={{ flexGrow: 1, p: 3 }}>
+        <ToastContainer />
+
+        {/* Overview Section */}
+        {activeSection === 'overview' && (
+          <Box>
+            <Typography variant="h4" sx={{ mb: 3, fontWeight: 'bold' }}>
+              Dashboard Overview
+            </Typography>
+            
+            <Grid container spacing={3}>
+              <Grid item xs={12} md={4}>
+                <Card sx={{ bgcolor: '#4caf50', color: 'white' }}>
+                  <CardContent>
+                    <Typography variant="h6" gutterBottom>
+                      Wallet Balance
+                    </Typography>
+                    <Typography variant="h3" sx={{ fontWeight: 'bold' }}>
+                      ₹{user?.balance || 0}
+                    </Typography>
+                  </CardContent>
+                </Card>
+              </Grid>
+              
+              <Grid item xs={12} md={4}>
+                <Card sx={{ bgcolor: '#2196f3', color: 'white' }}>
+                  <CardContent>
+                    <Typography variant="h6" gutterBottom>
+                      Bank Accounts
+                    </Typography>
+                    <Typography variant="h3" sx={{ fontWeight: 'bold' }}>
+                      {bankAccounts.length}
+                    </Typography>
+                  </CardContent>
+                </Card>
+              </Grid>
+              
+              <Grid item xs={12} md={4}>
+                <Card sx={{ bgcolor: '#ff9800', color: 'white' }}>
+                  <CardContent>
+                    <Typography variant="h6" gutterBottom>
+                      Total Transactions
+                    </Typography>
+                    <Typography variant="h3" sx={{ fontWeight: 'bold' }}>
+                      {transactions.length}
+                    </Typography>
+                  </CardContent>
+                </Card>
+              </Grid>
+            </Grid>
+
+            <Box sx={{ mt: 4 }}>
+              <Typography variant="h5" sx={{ mb: 2 }}>
+                Recent Transactions
+              </Typography>
+              <TableContainer component={Paper}>
+                <Table>
+                  <TableHead>
+                    <TableRow>
+                      <TableCell>Type</TableCell>
+                      <TableCell>Amount</TableCell>
+                      <TableCell>Status</TableCell>
+                      <TableCell>Date</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {transactions.slice(0, 5).map((transaction) => (
+                      <TableRow key={transaction.id}>
+                        <TableCell>{getTransactionType(transaction)}</TableCell>
+                        <TableCell sx={{ color: getAmountColor(transaction), fontWeight: 'bold' }}>
+                          {getTransactionAmount(transaction)}
+                        </TableCell>
+                        <TableCell>
+                          <Chip 
+                            label={transaction.status} 
+                            color={getStatusColor(transaction.status)}
+                            size="small"
+                          />
+                        </TableCell>
+                        <TableCell>{formatDate(transaction.created_at)}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            </Box>
+          </Box>
+        )}
+
+        {/* Transfer Money Section */}
+        {activeSection === 'transfer' && (
+          <Box>
+            <Typography variant="h4" sx={{ mb: 3, fontWeight: 'bold' }}>
+              Transfer Money
+            </Typography>
+            <Card sx={{ maxWidth: 500 }}>
+              <CardContent>
+                <Button
+                  variant="contained"
+                  fullWidth
+                  size="large"
+                  onClick={() => setTransferDialog(true)}
+                  sx={{ py: 2, fontSize: '1.1rem' }}
+                >
+                  Send Money
+                </Button>
+              </CardContent>
+            </Card>
+          </Box>
+        )}
+
+        {/* Bank Accounts Section */}
+        {activeSection === 'banks' && (
+          <Box>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+              <Typography variant="h4" sx={{ fontWeight: 'bold' }}>
+                Bank Accounts
+              </Typography>
+              <Button
+                variant="contained"
+                startIcon={<Add />}
+                onClick={() => setAddBankDialog(true)}
+              >
+                Add Bank Account
+              </Button>
+            </Box>
+            
+            <Grid container spacing={3}>
+              {bankAccounts.map((account) => (
+                <Grid item xs={12} md={6} key={account.id}>
+                  <Card>
+                    <CardContent>
+                      <Typography variant="h6" gutterBottom>
+                        {account.bank_name}
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        Account: ****{account.account_number.slice(-4)}
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        IFSC: {account.ifsc}
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        Holder: {account.account_holder_name}
+                      </Typography>
+                      {account.is_primary && (
+                        <Chip label="Primary" color="primary" size="small" sx={{ mt: 1 }} />
+                      )}
+                    </CardContent>
+                  </Card>
+                </Grid>
+              ))}
+            </Grid>
+          </Box>
+        )}
+
+        {/* Transactions Section */}
+        {activeSection === 'transactions' && (
+          <Box>
+            <Typography variant="h4" sx={{ mb: 3, fontWeight: 'bold' }}>
+              Transaction History
+            </Typography>
+            <TableContainer component={Paper}>
+              <Table>
+                <TableHead>
+                  <TableRow>
+                    <TableCell>Transaction ID</TableCell>
+                    <TableCell>Type</TableCell>
+                    <TableCell>Amount</TableCell>
+                    <TableCell>Status</TableCell>
+                    <TableCell>Date</TableCell>
+                    <TableCell>Description</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {transactions.map((transaction) => (
+                    <TableRow key={transaction.id}>
+                      <TableCell sx={{ fontFamily: 'monospace', fontSize: '0.8rem' }}>
+                        {transaction.transaction_id.slice(0, 8)}...
+                      </TableCell>
+                      <TableCell>{getTransactionType(transaction)}</TableCell>
+                      <TableCell sx={{ color: getAmountColor(transaction), fontWeight: 'bold' }}>
+                        {getTransactionAmount(transaction)}
+                      </TableCell>
+                      <TableCell>
+                        <Chip 
+                          label={transaction.status} 
+                          color={getStatusColor(transaction.status)}
+                          size="small"
+                        />
+                      </TableCell>
+                      <TableCell>{formatDate(transaction.created_at)}</TableCell>
+                      <TableCell>{transaction.description || '-'}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          </Box>
+        )}
+
+        {/* Add Money Section */}
+        {activeSection === 'addmoney' && (
+          <Box>
+            <Typography variant="h4" sx={{ mb: 3, fontWeight: 'bold' }}>
+              Add Money to Wallet
+            </Typography>
+            <Card sx={{ maxWidth: 500 }}>
+              <CardContent>
+                <Button
+                  variant="contained"
+                  fullWidth
+                  size="large"
+                  onClick={() => setAddMoneyDialog(true)}
+                  sx={{ py: 2, fontSize: '1.1rem' }}
+                >
+                  Add Money
+                </Button>
+              </CardContent>
+            </Card>
+          </Box>
+        )}
+      </Box>
+
+      {/* Transfer Dialog */}
+      <Dialog open={transferDialog} onClose={() => setTransferDialog(false)} maxWidth="sm" fullWidth>
+        <DialogTitle>Transfer Money</DialogTitle>
+        <DialogContent>
+          <TextField
+            fullWidth
+            label="Receiver Username"
+            value={transferForm.receiver_username}
+            onChange={(e) => setTransferForm({...transferForm, receiver_username: e.target.value})}
+            margin="normal"
+          />
+          <TextField
+            fullWidth
+            label="Amount"
+            type="number"
+            value={transferForm.amount}
+            onChange={(e) => setTransferForm({...transferForm, amount: e.target.value})}
+            margin="normal"
+          />
+          <TextField
+            fullWidth
+            label="Description (Optional)"
+            value={transferForm.description}
+            onChange={(e) => setTransferForm({...transferForm, description: e.target.value})}
+            margin="normal"
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setTransferDialog(false)}>Cancel</Button>
+          <Button onClick={handleTransfer} variant="contained" disabled={loading}>
+            {loading ? <CircularProgress size={24} /> : 'Transfer'}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Add Bank Dialog */}
+      <Dialog open={addBankDialog} onClose={() => setAddBankDialog(false)} maxWidth="sm" fullWidth>
+        <DialogTitle>Add Bank Account</DialogTitle>
+        <DialogContent>
+          <TextField
+            fullWidth
+            label="Account Number"
+            value={bankForm.account_number}
+            onChange={(e) => setBankForm({...bankForm, account_number: e.target.value})}
+            margin="normal"
+          />
+          <TextField
+            fullWidth
+            label="Bank Name"
+            value={bankForm.bank_name}
+            onChange={(e) => setBankForm({...bankForm, bank_name: e.target.value})}
+            margin="normal"
+          />
+          <TextField
+            fullWidth
+            label="IFSC Code"
+            value={bankForm.ifsc}
+            onChange={(e) => setBankForm({...bankForm, ifsc: e.target.value})}
+            margin="normal"
+          />
+          <TextField
+            fullWidth
+            label="Account Holder Name"
+            value={bankForm.account_holder_name}
+            onChange={(e) => setBankForm({...bankForm, account_holder_name: e.target.value})}
+            margin="normal"
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setAddBankDialog(false)}>Cancel</Button>
+          <Button onClick={handleAddBank} variant="contained" disabled={loading}>
+            {loading ? <CircularProgress size={24} /> : 'Add Bank'}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Add Money Dialog */}
+      <Dialog open={addMoneyDialog} onClose={() => setAddMoneyDialog(false)} maxWidth="sm" fullWidth>
+        <DialogTitle>Add Money to Wallet</DialogTitle>
+        <DialogContent>
+          <TextField
+            fullWidth
+            label="Amount"
+            type="number"
+            value={addMoneyForm.amount}
+            onChange={(e) => setAddMoneyForm({...addMoneyForm, amount: e.target.value})}
+            margin="normal"
+          />
+          <TextField
+            fullWidth
+            select
+            label="Bank Account"
+            value={addMoneyForm.bank_account_id}
+            onChange={(e) => setAddMoneyForm({...addMoneyForm, bank_account_id: e.target.value})}
+            margin="normal"
+            SelectProps={{ native: true }}
           >
-            {sec === "transactions" && "Transaction History"}
-            {sec === "addbank" && "Add Bank"}
-            {sec === "banktransfer" && "Bank Transfer"}
-            {sec === "history" && "Payment History"}
-            {sec === "scan" && "Scan Payment"}
-          </button>
-        ))}
-      </aside>
-
-    <main className="flex-1 p-12 bg-white rounded-l-3xl shadow-lg overflow-y-auto">
-
-  {section === "transactions" && (
-    <Transaction
-      transactions={filteredTransactions}
-      payNow={payNow}
-      paymentLoading={paymentLoading}
-    />
-  )}
-
-  {section === "addbank" && (
-    <>
-      <h1 className="text-4xl font-semibold mb-8 border-b border-gray-300 pb-4">Add Bank Account</h1>
-      <form
-        onSubmit={handleAddTransaction}
-        className="max-w-lg space-y-6"
-      >
-        <select
-          required
-          value={newTxn.type}
-          onChange={(e) => setNewTxn({ ...newTxn, type: e.target.value })}
-          className="block w-full p-4 rounded-md border border-gray-300 outline-none focus:ring-2 focus:ring-blue-500"
-        >
-          <option value="sent">Paid To</option>
-          <option value="received">Received From</option>
-        </select>
-        <input
-          type="text"
-          placeholder="Name"
-          required
-          value={newTxn.name}
-          onChange={(e) => setNewTxn({ ...newTxn, name: e.target.value })}
-          className="block w-full p-4 rounded-md border border-gray-300 outline-none focus:ring-2 focus:ring-blue-500"
-        />
-        <input
-          type="number"
-          min="1"
-          step="any"
-          placeholder="Amount"
-          required
-          value={newTxn.amount}
-          onChange={(e) => setNewTxn({ ...newTxn, amount: e.target.value })}
-          className="block w-full p-4 rounded-md border border-gray-300 outline-none focus:ring-2 focus:ring-blue-500"
-        />
-        <input
-          type="date"
-          required
-          value={newTxn.date}
-          onChange={(e) => setNewTxn({ ...newTxn, date: e.target.value })}
-          className="block w-full p-4 rounded-md border border-gray-300 outline-none focus:ring-2 focus:ring-blue-500"
-        />
-        <p className="text-sm text-gray-600 mb-2">
-          Contact number will be used to reach out for payment-related communication.
-        </p>
-        <button
-          type="submit"
-          className="w-full py-4 bg-purple-600 hover:bg-purple-700 font-bold text-white rounded-lg shadow-md transition"
-        >
-          Save & Add Transaction
-        </button>
-      </form>
-    </>
-  )}
-
-  {(section === "banktransfer" || section === "history" || section === "scan") && (
-    <div className="flex justify-center items-center h-full text-xl text-gray-500">
-      <p>{section.charAt(0).toUpperCase() + section.slice(1)} feature will be available soon.</p>
-    </div>
-  )}
-  
-</main>
-
-    </div>
+            <option value="">Select Bank Account</option>
+            {bankAccounts.map((account) => (
+              <option key={account.id} value={account.id}>
+                {account.bank_name} - ****{account.account_number.slice(-4)}
+              </option>
+            ))}
+          </TextField>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setAddMoneyDialog(false)}>Cancel</Button>
+          <Button onClick={handleAddMoney} variant="contained" disabled={loading}>
+            {loading ? <CircularProgress size={24} /> : 'Add Money'}
+          </Button>
+        </DialogActions>
+      </Dialog>
+    </Box>
   );
-}
+};
+
+export default Dashboard;
