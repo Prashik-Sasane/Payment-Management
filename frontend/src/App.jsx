@@ -7,6 +7,7 @@ import BankTransfer from './page/Banktransfer'
 import Transaction from './page/Transaction'
 import Dashboard from './page/Dashboard'
 import SpotlightPreview from './components/SpotlightPreview'
+import TimelineDemo from './components/TimelineDemo'
 import './App.css'
 const App = () => {
   return (
@@ -20,6 +21,8 @@ const App = () => {
         <Route path='/transaction' element={<Transaction />} />
         <Route path='/add' element={<Dashboard />} />
         <Route path='/spotlight' element={<SpotlightPreview />} />
+        <Route path='/timeline' element={<TimelineDemo />} />
+
       </Routes>
     </BrowserRouter>
     </div>
