@@ -7,7 +7,8 @@ const cors = require('cors');
 
 dotenv.config();
 
-const PORT = process.env.PORT || 4000;
+const PORT = 4000; // Force port 4000
+console.log('Starting server on port:', PORT);
 
 const app = express();
 
