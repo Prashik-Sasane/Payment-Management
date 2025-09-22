@@ -1,6 +1,6 @@
 // src/page/StepperPage.jsx
 import React from "react";
-import Stepper, { Step } from "../components/Stepper";
+import Stepper from "../components/Stepper";
 
 export default function StepperPage() {
   return (
@@ -10,30 +10,30 @@ export default function StepperPage() {
         onStepChange={(step) => console.log("Step changed:", step)}
         onFinalStepCompleted={() => console.log("All steps complete!")}
       >
-        <Step>
+        {/* <Step>
           <div className="p-4">
             <h2 className="text-lg font-bold">Step 1: Personal Info</h2>
             <p className="text-sm text-gray-600">
               Enter your name and contact details.
             </p>
           </div>
-        </Step>
-        <Step>
+        </Step> */}
+        {/* <Step>
           <div className="p-4">
             <h2 className="text-lg font-bold">Step 2: Bank Info</h2>
             <p className="text-sm text-gray-600">
               Fill in account number and IFSC code.
             </p>
           </div>
-        </Step>
-        <Step>
+        </Step> */}
+        {/* <Step>
           <div className="p-4">
             <h2 className="text-lg font-bold">Step 3: Review</h2>
             <p className="text-sm text-gray-600">
               Review the details before confirming.
             </p>
           </div>
-        </Step>
+        </Step> */}
       </Stepper>
     </div>
   );

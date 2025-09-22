@@ -107,6 +107,9 @@ export default function Navbar() {
             Transactions
           </li>
 
+          <li className="px-4 py-2 hover:bg-gray-200/50 rounded transition cursor-pointer">
+            Login
+          </li>
         </ul>
 
       </div>

@@ -17,12 +17,12 @@ const {
 } = require('../models/userModel');
 const { generateToken } = require('../middleware/auth');
 
-// User Registration
-const register = (req, res) => {
-  const { username, email, password, full_name, phone } = req.body;
 
-  if (!username || !email || !password || !full_name) {
-    return res.status(400).json({ error: "Username, email, password, and full name are required" });
+const register = (req, res) => {
+  const { firstName, lastName, email, password } = req.body;
+
+  if (!firstName ||  !lastName || !email || !password) {
+    return res.status(400).json({ error: "full name, email, password" });
   }
 
   // Check if user already exists
@@ -36,7 +36,7 @@ const register = (req, res) => {
     }
 
     // Create new user
-    createUser({ username, email, password, full_name, phone }, (err, result) => {
+    createUser({ username, email, password, full_name}, (err, result) => {
       if (err) {
         if (err.code === 'ER_DUP_ENTRY') {
           return res.status(400).json({ error: "Username or email already exists" });
@@ -61,48 +61,45 @@ const register = (req, res) => {
 };
 
 // User Login
-const login = (req, res) => {
-  const { email, password } = req.body;
+// const login = (req, res) => {
+//   const { FirstName , LastName , email, password } = req.body;
 
-  if (!email || !password) {
-    return res.status(400).json({ error: "Email and password are required" });
-  }
+//   if (!firstName || !LastName || !email || !password) {
+//     return res.status(400).json({ error: "Email and password are required" });
+//   }
 
-  getUserByEmail(email, (err, user) => {
-    if (err) {
-      return res.status(500).json({ error: "Database error" });
-    }
+//   getUserByEmail(email, (err, user) => {
+//     if (err) {
+//       return res.status(500).json({ error: "Database error" });
+//     }
 
-    if (!user) {
-      return res.status(401).json({ error: "Invalid credentials" });
-    }
+//     if (!user) {
+//       return res.status(401).json({ error: "Invalid credentials" });
+//     }
 
-    bcrypt.compare(password, user.password, (err, isMatch) => {
-      if (err) {
-        return res.status(500).json({ error: "Authentication error" });
-      }
+//     bcrypt.compare(password, user.password, (err, isMatch) => {
+//       if (err) {
+//         return res.status(500).json({ error: "Authentication error" });
+//       }
 
-      if (!isMatch) {
-        return res.status(401).json({ error: "Invalid credentials" });
-      }
 
-      const token = generateToken(user.id);
-      res.json({
-        message: "Login successful",
-        token,
-        user: {
-          id: user.id,
-          username: user.username,
-          email: user.email,
-          full_name: user.full_name,
-          phone: user.phone,
-          balance: user.balance,
-          is_verified: user.is_verified
-        }
-      });
-    });
-  });
-};
+//       const token = generateToken(user.id);
+//       res.json({
+//         message: "Login successful",
+//         token,
+//         user: {
+//           id: user.id,
+//           firstName: user.firstName,
+//           lastName: user.lastName,
+//           email: user.email,
+//           phone: user.phone,
+//           balance: user.balance,
+//           is_verified: user.is_verified
+//         }
+//       });
+//     });
+//   });
+// };
 
 // Get user profile
 const getProfile = (req, res) => {
@@ -390,7 +387,6 @@ const addMoney = (req, res) => {
 
 module.exports = {
   register,
-  login,
   getProfile,
   addBank,
   getBanks,

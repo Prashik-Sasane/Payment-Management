@@ -99,7 +99,7 @@ export default function ImageSlider() {
             <option value="Business Loan">Business Loan</option>
           </select>
 
-          {/* CIBIL + Submit */}
+          
           <div className="flex items-center gap-4">
             <input
               type="number"
@@ -146,7 +146,6 @@ export default function ImageSlider() {
        Get Your CIBIL
        </button>
       </div>
-
         </div>
     </>
   );

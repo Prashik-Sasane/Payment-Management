@@ -1,126 +1,104 @@
-import React, { useState } from "react";
-import { Link as RouterLink, useNavigate } from "react-router-dom";
-import { ToastContainer, toast } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
-import { useAuth } from "../context/AuthContext";
+"use client";
+import React from "react";
+import { Label } from "./ui/label";
+import { Input } from "./ui/input";
+import { cn } from "../lib/utils";
+import {
+  IconBrandGithub,
+  IconBrandGoogle,
+  IconBrandOnlyfans,
+} from "@tabler/icons-react";
 
-export default function Login() {
-  const [form, setForm] = useState({ email: "", password: "", confirmPassword: "" });
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-  const { login } = useAuth();
-  const navigate = useNavigate();
-
-  const handleSubmit = async (e) => {
+export default function SignupFormDemo() {
+  const handleSubmit = (e) => {
     e.preventDefault();
-    setLoading(true);
-    setError("");
-
-    if (!form.email || !form.password || !form.confirmPassword) {
-      setError("Please fill in all fields");
-      setLoading(false);
-      return;
-    }
-
-    if (form.password !== form.confirmPassword) {
-      setError("Passwords do not match");
-      setLoading(false);
-      return;
-    }
-
-    const result = await login(form.email, form.password);
-
-    if (result.success) {
-      toast.success("Login successful!", { position: "top-center", autoClose: 3000, theme: "dark" });
-      navigate("/dashboard");
-    } else {
-      setError(result.error);
-      toast.error(result.error, { position: "top-center", autoClose: 5000, theme: "dark" });
-    }
-
-    setLoading(false);
+    console.log("Form submitted");
   };
-
-  const handleInputChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
-  };
-
-  const isButtonDisabled =
-    !form.email || !form.password || !form.confirmPassword || form.password !== form.confirmPassword || loading;
-
   return (
-    <div className="min-h-screen w-full bg-gray-900 flex flex-col px-6 py-8 text-white relative">
-      {/* Logo top-left */}
-      <div className="absolute top-4 left-6 text-2xl font-bold text-white">
-        GenZ Bank
-      </div>
-
-      <ToastContainer />
-
-      <div className="flex flex-col items-center justify-center w-full h-full">
-        {error && (
-          <div className="bg-red-600 text-white rounded-lg p-3 mb-4 w-full max-w-md text-center shadow-md">
-            {error}
-          </div>
-        )}
-
-        <form onSubmit={handleSubmit} className="w-full max-w-md flex flex-col gap-4">
-          <input
-            type="email"
-            name="email"
-            placeholder="Email address"
-            value={form.email}
-            onChange={handleInputChange}
-            className="w-full px-5 py-3 rounded-xl bg-gray-800 placeholder-gray-400 text-white border border-gray-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition"
-            required
-          />
-
-          <input
-            type="password"
-            name="password"
-            placeholder="Password"
-            value={form.password}
-            onChange={handleInputChange}
-            className="w-full px-5 py-3 rounded-xl bg-gray-800 placeholder-gray-400 text-white border border-gray-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition"
-            required
-          />
-
-          <input
-            type="password"
-            name="confirmPassword"
-            placeholder="Confirm Password"
-            value={form.confirmPassword}
-            onChange={handleInputChange}
-            className="w-full px-5 py-3 rounded-xl bg-gray-800 placeholder-gray-400 text-white border border-gray-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition"
-            required
-          />
-
-          <button
-            type="submit"
-            disabled={isButtonDisabled}
-            className={`w-full py-3 mt-2 rounded-2xl font-bold text-lg transition-all duration-200 ${
-              isButtonDisabled
-                ? "bg-gray-700 text-gray-400 cursor-not-allowed"
-                : "bg-indigo-600 text-white hover:bg-indigo-500 shadow-lg"
-            }`}
-          >
-            {loading ? "Loading..." : "Sign In"}
-          </button>
-        </form>
-
-        <p className="mt-6 text-center text-sm opacity-80">
-          Don't have an account?{" "}
-          <RouterLink to="/" className="underline font-semibold hover:text-indigo-400 transition">
-            Sign up
-          </RouterLink>
-        </p>
-
-        <div className="flex justify-center gap-6 mt-8 opacity-70 text-xs">
-          <span className="font-semibold">Secure</span>
-          <span className="font-semibold">Fast</span>
-          <span className="font-semibold">Reliable</span>
+    <div
+      className="shadow-input mx-auto w-full max-w-md rounded-none bg-white p-4 md:rounded-2xl md:p-8 ">
+      <h2 className="text-xl mt-20 font-bold text-black ">
+        Welcome to Payment Manager
+      </h2>
+      <p className="mt-4 max-w-sm text-sm dark: text-black">
+        Login to aceternity if you can because we don&apos;t have a login flow
+        yet
+      </p>
+      <form className="my-6" onSubmit={handleSubmit}>
+        <div
+          className="mb-2 flex flex-col space-y-2 md:flex-row md:space-y-0 md:space-x-2">
+          <LabelInputContainer className="mb-4">
+            <Label htmlFor="firstname">First name</Label>
+            <Input id="firstname" placeholder="Tyler" type="text" />
+          </LabelInputContainer>
+          <LabelInputContainer>
+            <Label htmlFor="lastname">Last name</Label>
+            <Input id="lastname" placeholder="Durden" type="text" />
+          </LabelInputContainer>
         </div>
-      </div>
+        <LabelInputContainer className="mb-4">
+          <Label htmlFor="email">Email Address</Label>
+          <Input id="email" placeholder="projectmayhem@fc.com" type="email" />
+        </LabelInputContainer>
+        <LabelInputContainer className="mb-4">
+          <Label htmlFor="password">Password</Label>
+          <Input id="password" placeholder="••••••••" type="password" />
+        </LabelInputContainer>
+      
+        <button
+          className="group/btn relative block h-10 w-full rounded-md bg-gradient-to-br from-black to-neutral-600 font-medium text-white shadow-[0px_1px_0px_0px_#ffffff40_inset,0px_-1px_0px_0px_#ffffff40_inset] dark:bg-zinc-800 dark:from-zinc-900 dark:to-zinc-900 dark:shadow-[0px_1px_0px_0px_#27272a_inset,0px_-1px_0px_0px_#27272a_inset]"
+          type="submit">
+          Sign up &rarr;
+          <BottomGradient />
+        </button>
+
+        <div
+          className="my-8 h-[1px] w-full bg-gradient-to-r from-transparent via-neutral-300 to-transparent dark:via-neutral-700" />
+
+        <div className="flex flex-col space-y-4">
+          <button
+            className="group/btn shadow-input relative flex h-10 w-full items-center justify-start space-x-2 rounded-md bg-gray-50 px-4 font-medium text-black dark:bg-zinc-900 dark:shadow-[0px_0px_1px_1px_#262626]"
+            type="submit">
+            <IconBrandGithub className="h-4 w-4 text-neutral-800 dark:text-neutral-300" />
+            <span className="text-sm text-neutral-700 dark:text-neutral-300">
+              GitHub
+            </span>
+            <BottomGradient />
+          </button>
+          <button
+            className="group/btn shadow-input relative flex h-10 w-full items-center justify-start space-x-2 rounded-md bg-gray-50 px-4 font-medium text-black dark:bg-zinc-900 dark:shadow-[0px_0px_1px_1px_#262626]"
+            type="submit">
+            <IconBrandGoogle className="h-4 w-4 text-neutral-800 dark:text-neutral-300" />
+            <span className="text-sm text-neutral-700 dark:text-neutral-300">
+              Google
+            </span>
+            <BottomGradient />
+          </button>
+          
+        </div>
+      </form>
     </div>
   );
 }
+
+const BottomGradient = () => {
+  return (
+    <>
+      <span
+        className="absolute inset-x-0 -bottom-px block h-px w-full bg-gradient-to-r from-transparent via-cyan-500 to-transparent opacity-0 transition duration-500 group-hover/btn:opacity-100" />
+      <span
+        className="absolute inset-x-10 -bottom-px mx-auto block h-px w-1/2 bg-gradient-to-r from-transparent via-indigo-500 to-transparent opacity-0 blur-sm transition duration-500 group-hover/btn:opacity-100" />
+    </>
+  );
+};
+
+const LabelInputContainer = ({
+  children,
+  className
+}) => {
+  return (
+    <div className={cn("flex w-full flex-col space-y-2", className)}>
+      {children}
+    </div>
+  );
+};
