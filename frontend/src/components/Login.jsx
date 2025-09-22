@@ -1,23 +1,11 @@
 import React, { useState } from "react";
 import { Link as RouterLink, useNavigate } from "react-router-dom";
-import './Login.css'
-import {
-  Box,
-  Typography,
-  Button,
-  TextField,
-  Divider,
-  Grid,
-  Link,
-  Alert,
-  CircularProgress
-} from "@mui/material";
-import { ToastContainer, toast } from 'react-toastify';
-import { useAuth } from '../context/AuthContext';
-
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import { useAuth } from "../context/AuthContext";
 
 export default function Login() {
-  const [form, setForm] = useState({ email: "", password: "" });
+  const [form, setForm] = useState({ email: "", password: "", confirmPassword: "" });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const { login } = useAuth();
@@ -28,192 +16,111 @@ export default function Login() {
     setLoading(true);
     setError("");
 
-    if (!form.email || !form.password) {
+    if (!form.email || !form.password || !form.confirmPassword) {
       setError("Please fill in all fields");
       setLoading(false);
       return;
     }
 
+    if (form.password !== form.confirmPassword) {
+      setError("Passwords do not match");
+      setLoading(false);
+      return;
+    }
+
     const result = await login(form.email, form.password);
-    
+
     if (result.success) {
-      toast.success('Login successful!', {
-        position: "top-center",
-        autoClose: 3000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-        progress: undefined,
-        theme: "light"
-      });
-      navigate('/dashboard');
+      toast.success("Login successful!", { position: "top-center", autoClose: 3000, theme: "dark" });
+      navigate("/dashboard");
     } else {
       setError(result.error);
-      toast.error(result.error, {
-        position: "top-center",
-        autoClose: 5000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-        progress: undefined,
-        theme: "light"
-      });
+      toast.error(result.error, { position: "top-center", autoClose: 5000, theme: "dark" });
     }
-    
+
     setLoading(false);
   };
 
   const handleInputChange = (e) => {
-    setForm({
-      ...form,
-      [e.target.name]: e.target.value
-    });
+    setForm({ ...form, [e.target.name]: e.target.value });
   };
 
+  const isButtonDisabled =
+    !form.email || !form.password || !form.confirmPassword || form.password !== form.confirmPassword || loading;
+
   return (
-    <Grid
-      container
-      direction="column"
-      sx={{ minHeight: "100vh" }}
-    >
-      <Grid
-        item
-        xs={12}
-        sx={{
-          background: "#111",
-          color: "white",
-          display: "flex",
-          flexDirection: "column",
-          justifyContent: "center",
-          px: 4,
-          py: 8,
-        }}
-      >
-        <form onSubmit={handleSubmit}>
-          <Box sx={{ width: "100%", maxWidth: 400, mx: "auto" }}>
-            <Box sx={{ mb: 6 }}>
-              <Box
-                sx={{
-                  width: 48,
-                  height: 48,
-                  bgcolor: "white",
-                  borderRadius: 2,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
-              >
-                <Typography variant="h5" sx={{ color: "black", fontWeight: "bold" }}>
-                  PP
-                </Typography>
-              </Box>
-            </Box>
+    <div className="min-h-screen w-full bg-gray-900 flex flex-col px-6 py-8 text-white relative">
+      {/* Logo top-left */}
+      <div className="absolute top-4 left-6 text-2xl font-bold text-white">
+        GenZ Bank
+      </div>
 
-            <Typography variant="h4" fontWeight="bold" gutterBottom>
-              Welcome back
-            </Typography>
-            <Typography variant="body1" sx={{ color: "gray", mb: 5 }}>
-              Sign in to your payment account to continue.
-            </Typography>
+      <ToastContainer />
 
-            {error && (
-              <Alert severity="error" sx={{ mb: 3, borderRadius: 2 }}>
-                {error}
-              </Alert>
-            )}
+      <div className="flex flex-col items-center justify-center w-full h-full">
+        {error && (
+          <div className="bg-red-600 text-white rounded-lg p-3 mb-4 w-full max-w-md text-center shadow-md">
+            {error}
+          </div>
+        )}
 
-            <TextField
-              name="email"
-              type="email"
-              value={form.email}
-              onChange={handleInputChange}
-              variant="outlined"
-              placeholder="Enter email address"
-              fullWidth
-              required
-              InputProps={{
-                style: {
-                  borderRadius: 24,
-                  color: "white",
-                  background: "#181818",
-                },
-              }}
-              sx={{
-                mb: 3,
-                "& .MuiOutlinedInput-root": {
-                  "& fieldset": { borderColor: "#333" },
-                  "&:hover fieldset": { borderColor: "#555" },
-                },
-                input: { color: "white" },
-              }}
-            />
+        <form onSubmit={handleSubmit} className="w-full max-w-md flex flex-col gap-4">
+          <input
+            type="email"
+            name="email"
+            placeholder="Email address"
+            value={form.email}
+            onChange={handleInputChange}
+            className="w-full px-5 py-3 rounded-xl bg-gray-800 placeholder-gray-400 text-white border border-gray-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition"
+            required
+          />
 
-            <TextField
-              name="password"
-              type="password"
-              value={form.password}
-              onChange={handleInputChange}
-              variant="outlined"
-              placeholder="Enter password"
-              fullWidth
-              required
-              InputProps={{
-                style: {
-                  borderRadius: 24,
-                  color: "white",
-                  background: "#181818",
-                },
-              }}
-              sx={{
-                mb: 3,
-                "& .MuiOutlinedInput-root": {
-                  "& fieldset": { borderColor: "#333" },
-                  "&:hover fieldset": { borderColor: "#555" },
-                },
-                input: { color: "white" },
-              }}
-            />
+          <input
+            type="password"
+            name="password"
+            placeholder="Password"
+            value={form.password}
+            onChange={handleInputChange}
+            className="w-full px-5 py-3 rounded-xl bg-gray-800 placeholder-gray-400 text-white border border-gray-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition"
+            required
+          />
 
-            <Button
-              type="submit"
-              variant="contained"
-              fullWidth
-              disabled={loading}
-              sx={{
-                backgroundColor: "white",
-                color: "black",
-                borderRadius: 6,
-                textTransform: "none",
-                fontWeight: "bold",
-                fontSize: 18,
-                py: 1.4,
-                boxShadow: "none",
-                "&:hover": { backgroundColor: "#ededed" },
-                "&:disabled": { backgroundColor: "#666", color: "#999" },
-              }}
-            >
-              {loading ? <CircularProgress size={24} color="inherit" /> : "Sign In"}
-            </Button>
+          <input
+            type="password"
+            name="confirmPassword"
+            placeholder="Confirm Password"
+            value={form.confirmPassword}
+            onChange={handleInputChange}
+            className="w-full px-5 py-3 rounded-xl bg-gray-800 placeholder-gray-400 text-white border border-gray-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition"
+            required
+          />
 
-            <ToastContainer />
-
-            <Typography variant="body2" sx={{ mt: 3, textAlign: "center" }}>
-              Don't have an account?&nbsp;
-              <Link component={RouterLink} to="/" underline="hover" sx={{ color: "white" }}>
-                Sign up
-              </Link>
-            </Typography>
-
-            <Box sx={{ display: "flex", gap: 4, mt: 6, opacity: 0.6, justifyContent: "center" }}>
-              <Typography variant="body2">Secure</Typography>
-              <Typography variant="body2">Fast</Typography>
-              <Typography variant="body2">Reliable</Typography>
-            </Box>
-          </Box>
+          <button
+            type="submit"
+            disabled={isButtonDisabled}
+            className={`w-full py-3 mt-2 rounded-2xl font-bold text-lg transition-all duration-200 ${
+              isButtonDisabled
+                ? "bg-gray-700 text-gray-400 cursor-not-allowed"
+                : "bg-indigo-600 text-white hover:bg-indigo-500 shadow-lg"
+            }`}
+          >
+            {loading ? "Loading..." : "Sign In"}
+          </button>
         </form>
-      </Grid>
-    </Grid>
+
+        <p className="mt-6 text-center text-sm opacity-80">
+          Don't have an account?{" "}
+          <RouterLink to="/" className="underline font-semibold hover:text-indigo-400 transition">
+            Sign up
+          </RouterLink>
+        </p>
+
+        <div className="flex justify-center gap-6 mt-8 opacity-70 text-xs">
+          <span className="font-semibold">Secure</span>
+          <span className="font-semibold">Fast</span>
+          <span className="font-semibold">Reliable</span>
+        </div>
+      </div>
+    </div>
   );
 }
