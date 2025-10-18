@@ -10,7 +10,6 @@ const createUser = (userData, callback) => {
     if (err) {
       return callback(err, null);
     }
-    
     const query = "INSERT INTO users (username, email, password, full_name, phone) VALUES (?, ?, ?, ?, ?)";
     db.query(query, [username, email, hashedPassword, full_name, phone], (err, result) => {
       if (err) {
@@ -54,6 +53,7 @@ const updateUserBalance = (userId, amount, callback) => {
     callback(null, result);
   });
 };
+
 
 // Bank account operations
 const addBankAccount = (user_id, bank_account, callback) => {

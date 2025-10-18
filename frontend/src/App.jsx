@@ -1,38 +1,27 @@
-import React from "react";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { AuthProvider } from "./context/AuthContext";
-import UserSignUp from "./components/UserSignUP";
-import Login from "./components/Login";
-import Payment from "./page/Payment";
-
-import Transaction from "./page/Transaction";
-import Layout from "./components/Layout";
-import "./App.css";
-import Home from './components/Home'
-import StepperPage from "./page/StepperPage";
-
-const App = () => {
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import LoginPage from "./page/LoginPage";
+import Dashboard from "./page/Dashboard";
+import BankSelection from "./page/BankSelection";
+import SendMoney from "./page/SendMoney";
+import TransactionHistory from "./page/TransactionHistory";
+import Profile from "./page/Profile";
+import Navbar from "./components/Navbar";
+import ContactUs from "./components/Contact";
+function App() {
   return (
-    <AuthProvider>
-      <BrowserRouter>
-        <Routes>
-          {/* Pages WITHOUT navbar */}
-          {/* <Route path="/" element={<UserSignUp />} /> */}
-          <Route path="/login" element={<Login />} />
-
-          {/* Pages WITH navbar using Layout */}
-          <Route element={<Layout />}>
-          <Route path="/home" element={<Home />} />
-         <Route path="/stepper" element={<StepperPage />} />
-           
-            <Route path="/payment" element={<Payment />} />
-            <Route path="/transaction" element={<Transaction />} />
-
-          </Route>
-        </Routes>
-      </BrowserRouter>
-    </AuthProvider>
+    <Router>
+      <Navbar />
+      <Routes>
+        <Route path="/" element={<LoginPage />} />
+        <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/select-bank" element={<BankSelection />} />
+        <Route path="/send-money" element={<SendMoney />} />
+        <Route path="/transactions" element={<TransactionHistory />} />
+        <Route path="/profile" element={<Profile />} />
+        <Route path="/contact" element={<ContactUs />} />
+      </Routes>
+    </Router>
   );
-};
+}
 
 export default App;

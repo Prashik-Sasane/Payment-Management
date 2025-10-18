@@ -13,7 +13,7 @@
 //   return (
 //     <div style={appBackgroundStyle} className="min-h-screen p-6 flex flex-col items-center space-y-16">
 //       <h1 className="text-4xl font-bold mt-8 text-gray-100">Cashback & Rewards</h1>
-
+<h1>Cashback & Reward</h1>
 //       <section className="max-w-4xl w-full bg-gray-800 rounded-xl p-8 shadow-lg flex flex-col md:flex-row items-center md:space-x-12 space-y-8 md:space-y-0">
 //         <img
 //           src="https://plus.unsplash.com/premium_photo-1728395867332-643d5a691807?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8NXx8Q2FzaGJhY2slMjBSZXdhcmRzfGVufDB8fDB8fHww"

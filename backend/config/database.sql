@@ -1,7 +1,6 @@
 -- Payment Management System Database Schema
 CREATE DATABASE IF NOT EXISTS payment;
 USE payment;
-
 -- Users table
 CREATE TABLE IF NOT EXISTS users (
     id INT PRIMARY KEY AUTO_INCREMENT,
@@ -11,8 +10,7 @@ CREATE TABLE IF NOT EXISTS users (
     password VARCHAR(255) NOT NULL,
     phone VARCHAR(20),
     balance DECIMAL(15,2) DEFAULT 0.00,
-    is_verified BOOLEAN DEFAULT FALSE,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    is_verified BOOLEAN DEFAULT FALSE,TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
@@ -27,6 +25,7 @@ CREATE TABLE IF NOT EXISTS bank_accounts (
     is_primary BOOLEAN DEFAULT FALSE,
     is_verified BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    created_at TIMESTAMP DEFAULT CURRENT_
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
