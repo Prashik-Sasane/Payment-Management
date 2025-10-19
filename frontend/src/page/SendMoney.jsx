@@ -44,12 +44,12 @@ export default function SendMoney() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#6de2f5] to-[#9ab0fc] py-10 px-4 flex flex-col items-center">
-      <div className="bg-white w-full max-w-2xl rounded-3xl py-9 px-10 shadow-2xl flex flex-col items-center mb-14">
+    <div className="min-h-screen bg-[#f3f0fa] py-10 px-4 flex flex-col items-center">
+      <div className="w-full max-w-2xl rounded-3xl py-9 px-10 flex flex-col items-center mb-14">
         <div className="w-full flex justify-between items-center mb-6">
-          <h1 className="text-3xl font-bold text-[#5443cf]">Send Money</h1>
+          <h1 className="text-3xl font-semibold text-[#5443cf]">Send Money</h1>
           <FaPlus
-            className="text-3xl text-[#6d63fc] cursor-pointer hover:text-[#5145cd] transition"
+            className="text-2xl text-[#6d63fc] cursor-pointer hover:text-[#5145cd] transition"
             onClick={handleAddNew}
             title="Add New Contact"
           />
@@ -66,7 +66,7 @@ export default function SendMoney() {
           <FaSearch className="absolute top-4 left-5 text-[#6d63fc] text-xl" />
         </div>
 
-        <div className="w-full grid grid-cols-4 gap-6 max-h-48 overflow-y-auto mb-8 justify-center">
+        <div className="w-full grid grid-cols-4 gap-4 max-h-56 overflow-y-auto mb-8 justify-center">
           {filteredRecipients.length === 0 ? (
             <p className="w-full text-center text-gray-400 col-span-4">No contacts found</p>
           ) : (
@@ -74,7 +74,7 @@ export default function SendMoney() {
               <button
                 key={user.id}
                 onClick={() => setRecipient(recipients.indexOf(user))}
-                className={`flex flex-col items-center focus:outline-none py-2 rounded-xl transition ${
+                className={`flex flex-col items-center focus:outline-none py-2 rounded-4xl transition ${
                   recipient === recipients.indexOf(user)
                     ? "ring-4 ring-[#6d63fc] ring-opacity-60 bg-[#ede8ff]"
                     : ""

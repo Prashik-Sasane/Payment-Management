@@ -1,16 +1,12 @@
-import { DataTypes } from "sequelize";
-import sequelize from "../config/db.js";
+const db = require("../config/db.js");
 
-const User = sequelize.define("User", {
-  email: {
-    type: DataTypes.STRING,
-    allowNull: false,
-    unique: true,
-  },
-  password: {
-    type: DataTypes.STRING,
-    allowNull: false,
-  },
-});
+const createUser = (email, phone, callback) => {
+  const query = "INSERT INTO user (email, phone) VALUES (?, ?) ON DUPLICATE KEY UPDATE email=?";
+  db.query(query, [email, phone, email], callback);
+};
 
-export default User;
+const getUserByPhone = (phone, callback) => {
+  db.query("SELECT * FROM user WHERE phone = ?", [phone], callback);
+};
+
+module.exports = { createUser , getUserByPhone}
