@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import axios from "axios";
 
-// ✅ Set base URL for backend
+// Set base URL for backend
 axios.defaults.baseURL = "http://localhost:5000";
 
 function EmployeeDashboard() {
@@ -38,7 +38,6 @@ function EmployeeDashboard() {
     days: 0
   });
 
-  // 🧠 Get token from either context or localStorage
   const token = user?.token || localStorage.getItem("token");
 
   useEffect(() => {
@@ -51,7 +50,6 @@ function EmployeeDashboard() {
         position: user.position || prev.position,
         salary: user.salary || prev.salary
       }));
-
       fetchBankAccounts();
       fetchLeaveBalance();
     }
@@ -79,7 +77,6 @@ function EmployeeDashboard() {
     }
   };
 
-  // ✅ Add Bank Account
   const handleBankSubmit = async (e) => {
     e.preventDefault();
     try {
@@ -92,20 +89,23 @@ function EmployeeDashboard() {
       setBankForm({ accountNumber: "", bankName: "", ifscCode: "", accountHolderName: "" });
       fetchBankAccounts();
     } catch (err) {
-      console.error("❌ Error adding bank account:", err.response?.data || err.message);
       alert(err.response?.data?.error || "Failed to add bank account");
     }
   };
 
-  // ✅ Apply for Leave
   const handleLeaveSubmit = async (e) => {
     e.preventDefault();
+
+    if(!isNaN(start) || !isNaN(end)){
+      alert('Invalid Date plz provide the correct date');
+      return;
+    }
+
     const days = Math.ceil((new Date(leaveForm.endDate) - new Date(leaveForm.startDate)) / (1000 * 60 * 60 * 24)) + 1;
     if (days > employeeData.leaveBalance) {
       alert("Insufficient leave balance!");
       return;
     }
-
     try {
       const response = await axios.post(
         "/api/employee/leave",
@@ -116,7 +116,6 @@ function EmployeeDashboard() {
       setLeaveForm({ leaveType: "", startDate: "", endDate: "", reason: "", days: 0 });
       setEmployeeData(prev => ({ ...prev, leaveBalance: prev.leaveBalance - days }));
     } catch (err) {
-      console.error("❌ Error applying for leave:", err.response?.data || err.message);
       alert(err.response?.data?.error || "Failed to apply for leave");
     }
   };
@@ -129,166 +128,143 @@ function EmployeeDashboard() {
   ];
 
   return (
-    <div className="flex h-screen bg-gray-50">
+    <div className="flex min-h-screen font-sans bg-white">
       {/* Sidebar */}
-      <div className="w-64 bg-white shadow-lg">
-        <div className="p-6">
-          <h2 className="text-xl font-bold text-gray-800">Employee Portal</h2>
-          <p className="text-sm text-gray-600">{user?.name}</p>
-          <p className="text-xs text-gray-500">ID: {user?.employeeId}</p>
-        </div>
-        <nav className="mt-6">
+      <aside className="w-64 bg-white py-8 px-4 flex flex-col sticky top-0 h-screen border-r border-gray-200">
+        <h2 className="text-2xl font-bold text-[#222B45] px-4 mb-4">Employee Portal</h2>
+        <header className="flex justify-between items-center mb-8">
+          <div className="flex items-center gap-6">
+            <span className="flex items-center gap-2 bg-[#F4F4F6] px-4 py-2 rounded-xl">
+              <img src={user?.avatar || "https://i.pravatar.cc/40"} className="w-8 h-8 rounded-full" alt="" />
+              <span className="font-semibold text-[#222B45]">{user?.name}</span>
+              <span className="text-xs text-gray-500">ID: {user?.employeeId}</span>
+            </span>
+          </div>
+        </header>
+        <nav className="flex-1">
           {sidebarItems.map((item) => (
             <button
               key={item.id}
               onClick={() => setActiveSection(item.id)}
-              className={`w-full flex items-center px-6 py-3 text-left hover:bg-blue-50 transition-colors ${
-                activeSection === item.id
-                  ? "bg-blue-100 text-blue-700 border-r-2 border-blue-700"
-                  : "text-gray-700"
-              }`}
+              className={`w-full flex items-center px-6 py-3 my-1 rounded-xl transition-all font-medium gap-3 text-lg
+                ${activeSection === item.id
+                  ? "bg-[#554CFF] text-white shadow"
+                  : "text-[#505887] hover:bg-[#F1F0FF]"}
+              `}
             >
-              <span className="mr-3">{item.icon}</span>
+              <span>{item.icon}</span>
               {item.label}
             </button>
           ))}
         </nav>
-      </div>
+      </aside>
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col">
-        <header className="bg-white px-6 py-4">
-          <div className="flex justify-between items-center">
-            <h1 className="text-2xl font-bold text-gray-800">Employee Dashboard</h1>
-            <div className="flex items-center space-x-4">
-              <FaBell className="text-gray-600 cursor-pointer hover:text-blue-600" />
-              <FaCog className="text-gray-600 cursor-pointer hover:text-blue-600" />
-            </div>
+      <div className="flex-1 flex flex-col min-h-screen p-6">        
+        <div>
+            <h1 className="text-3xl font-semibold px-8 mb-6 text-[#222B45]">Employee Dashboard</h1>
           </div>
-        </header>
-        
-       {activeSection === "overview" && (
-          <div className="space-y-8 mt-6">
-            
-            <div className="p-6">
-              <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
-                <span className="text-blue-600 text-xl">👤</span> Employee Overview
-              </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <p className="text-gray-600">Name</p>
-                  <p className="font-semibold text-gray-900">{employeeData.name}</p>
+        <main className="p-4 px-6 flex-1">
+          {/* Overview Cards */}
+          {activeSection === "overview" && (
+            <>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                <div className="rounded-2xl bg-white border border-t-4 border-green-600 p-6 flex flex-col">
+                  <span className="bg-[#F1F0FF] rounded-xl w-9 h-9 flex items-center justify-center text-[#554CFF]"><FaFileAlt /></span>
+                  <span className="font-semibold text-lg mt-3">Generate Financial Report</span>
+                  <span className="text-[#8E95A9] text-sm">Analyze your financial report easily.</span>
+                  <button className="bg-[#554CFF] hover:bg-[#3F34D1] transition px-5 py-2 mt-4 rounded-xl text-white font-bold">Generate Report</button>
                 </div>
-                <div>
-                  <p className="text-gray-600">Employee ID</p>
-                  <p className="font-semibold text-gray-900">{employeeData.employeeId}</p>
+
+                <div className="rounded-2xl bg-white p-6 border border-t-4 border-red-500 flex flex-col">
+                  <span className="bg-[#F1F0FF] rounded-xl w-9 h-9 flex items-center justify-center text-[#554CFF]"><FaCreditCard /></span>
+                  <span className="text-3xl font-bold text-[#222B45] mt-3">₹{(employeeData.salary || 75000).toLocaleString()}</span>
+                  <span className="text-[#8E95A9] text-xs">Monthly Payroll</span>
+                  <span className="text-red-600 font-bold text-sm mt-1">-18.24%</span>
                 </div>
-                <div>
-                  <p className="text-gray-600">Department</p>
-                  <p className="font-semibold text-gray-900">{employeeData.department || "Finance"}</p>
-                </div>
-                <div>
-                  <p className="text-gray-600">Position</p>
-                  <p className="font-semibold text-gray-900">{employeeData.position || "Software Engineer"}</p>
-                </div>
-                <div>
-                  <p className="text-gray-600">Monthly Salary</p>
-                  <p className="font-semibold text-green-600">₹{employeeData.salary || 75000}</p>
-                </div>
-                <div>
-                  <p className="text-gray-600">Available Leave Balance</p>
-                  <p className="font-semibold text-blue-600">{employeeData.leaveBalance} Days</p>
+
+                <div className="rounded-2xl bg-white border border-t-4 border-indigo-500 p-6 flex flex-col">
+                  <span className="bg-[#F1F0FF] rounded-xl w-9 h-9 flex items-center justify-center text-[#554CFF]"><FaCalendarAlt /></span>
+                  <span className="text-3xl font-bold text-[#222B45] mt-3">₹429,862.92</span>
+                  <span className="text-[#8E95A9] text-xs">Company Expenses</span>
+                  <span className="text-green-600 font-bold text-sm mt-1">+24.92%</span>
                 </div>
               </div>
-            </div>
 
-            {/* Payment Summary Card */}
-            <div className="p-6">
-              <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
-                <span className="text-green-600 text-xl">💰</span> Payment Summary
-              </h3>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
-                <div>
-                  <p className="text-gray-600">Total Salary Received</p>
-                  <p className="font-bold text-green-600">
-                    ₹{(employeeData.salary || 75000) * 6}
-                  </p>
-                  <p className="text-sm text-gray-500">Last 6 months</p>
+              
+              <div className="grid md:grid-cols-2 gap-6 mb-6">
+                <div className="rounded-2xl bg-white border border-t-4 border-fuchsia-600 p-6">
+                  <h3 className="font-semibold text-[#554CFF] text-lg mb-4 flex gap-2 items-center"><FaUser />Employee Details</h3>
+                  <div className="mb-2"><span className="text-[#505887]">Name:</span> <span className="text-[#222B45] font-medium">{employeeData.name}</span></div>
+                  <div className="mb-2"><span className="text-[#505887]">Employee ID:</span> <span className="text-[#222B45] font-medium">{employeeData.employeeId}</span></div>
+                  <div className="mb-2"><span className="text-[#505887]">Department:</span> <span className="text-[#222B45] font-medium">{employeeData.department || "Finance"}</span></div>
+                  <div className="mb-2"><span className="text-[#505887]">Position:</span> <span className="text-[#222B45] font-medium">{employeeData.position || "Software Engineer"}</span></div>
+                  <div className="mb-2"><span className="text-[#505887]">Monthly Salary:</span> <span className="text-green-600 font-semibold">₹{employeeData.salary || 75000}</span></div>
+                  <div><span className="text-[#505887]">Leave Balance:</span> <span className="text-[#554CFF] font-semibold">{employeeData.leaveBalance} Days</span></div>
                 </div>
-                <div>
-                  <p className="text-gray-600">Last Payment</p>
-                  <p className="font-bold text-gray-900">₹{employeeData.salary || 75000}</p>
-                  <p className="text-sm text-gray-500">Credited on Oct 01, 2025</p>
-                </div>
-                <div>
-                  <p className="text-gray-600">Primary Bank</p>
-                  <p className="font-bold text-gray-900">
-                    {employeeData.bankAccounts[0]?.bank_name || "HDFC Bank"}
-                  </p>
-                  <p className="text-sm text-gray-500">
-                    ****{employeeData.bankAccounts[0]?.account_number?.slice(-4) || "1256"}
-                  </p>
+                
+                <div className="rounded-2xl bg-white border border-[#d7d7d7] p-6">
+                  <h3 className="font-semibold text-lg text-[#554CFF] mb-4 flex gap-2 items-center"><FaCreditCard />Payment Summary</h3>
+                  <div className="mb-3">Total Salary Received: <span className="font-bold text-green-600">₹{(employeeData.salary || 75000) * 6}</span></div>
+                  <div className="mb-3">Last Payment: <span className="font-bold text-[#222B45]">₹{employeeData.salary || 75000}</span> <span className="text-xs text-[#8E95A9]">(Oct 01, 2025)</span></div>
+                  <div>
+                    Primary Bank: <span className="font-semibold text-[#222B45]">{employeeData.bankAccounts[0]?.bank_name || "HDFC Bank"}</span> <span className="ml-2 text-[#8E95A9]">****{employeeData.bankAccounts[0]?.account_number?.slice(-4) || "1256"}</span>
+                  </div>
                 </div>
               </div>
-            </div>
 
-            {/* Salary Transaction History */}
-            <div className="bg-white p-6 rounded-lg shadow">
-              <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
-                <span className="text-gray-600 text-xl">📜</span> Salary Payment History
-              </h3>
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm text-left text-gray-600">
-                  <thead className="text-gray-700 border-b">
-                    <tr>
-                      <th className="py-2">Date</th>
-                      <th className="py-2">Amount</th>
-                      <th className="py-2">Status</th>
-                      <th className="py-2">Transaction ID</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {/* Dummy Transactions */}
-                    {[
-                      { id: 1, date: "25 Sep 2025", amount: 75000, status: "Paid", txn: "TXN89345" },
-                      { id: 2, date: "25 Aug 2025", amount: 75000, status: "Paid", txn: "TXN67321" },
-                      { id: 3, date: "25 Jul 2025", amount: 75000, status: "Paid", txn: "TXN45319" },
-                    ].map((t) => (
-                      <tr key={t.id} className="border-b hover:bg-gray-50">
-                        <td className="py-2">{t.date}</td>
-                        <td className="py-2">₹{t.amount.toLocaleString()}</td>
-                        <td className="py-2">
-                          <span
-                            className={`px-3 py-1 text-xs font-medium rounded-full ${
-                              t.status === "Paid"
-                                ? "bg-green-100 text-green-700"
-                                : "bg-yellow-100 text-yellow-700"
-                            }`}
-                          >
-                            {t.status}
-                          </span>
-                        </td>
-                        <td className="py-2 text-gray-800">{t.txn}</td>
+              
+              <div className="rounded-2xl border-t-4 border-sky-500 p-6 bg-white">
+                <h3 className="font-semibold text-lg text-[#554CFF] mb-4 flex items-center gap-2"><FaHistory /> Salary Payment History</h3>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm text-left text-[#505887]">
+                    <thead className="text-[#222B45] border-b">
+                      <tr>
+                        <th className="py-2 px-4 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Date</th>
+                        <th className="py-2 px-4 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Amount</th>
+                        <th className="py-2 px-4 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Status</th>
+                        <th className="py-2 px-4 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Txn ID</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody>
+                      {[
+                        { id: 1, date: "25 Sep 2025", amount: 75000, status: "Paid", txn: "TXN89345" },
+                        { id: 2, date: "25 Aug 2025", amount: 75000, status: "Paid", txn: "TXN67321" },
+                        { id: 3, date: "25 Jul 2025", amount: 75000, status: "Paid", txn: "TXN45319" },
+                      ].map((t) => (
+                        <tr key={t.id} className="border-b border-gray-300 hover:bg-[#F7F8FA] text-black">
+                          <td className="py-2 px-4">{t.date}</td>
+                          <td className="py-2 px-4">₹{t.amount.toLocaleString()}</td>
+                          <td className="py-2 px-4">
+                            <span className={`px-3 py-1 text-xs font-medium rounded-full
+                              ${t.status === "Paid"
+                                ? "bg-green-100 text-green-700"
+                                : "bg-yellow-100 text-yellow-700"}`}>
+                              {t.status}
+                            </span>
+                          </td>
+                          <td className="py-2 px-4">{t.txn}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               </div>
-            </div>
-          </div>
-        )}
-
-
-        <div className="flex-1 p-6 overflow-y-auto">
+            </>
+          )}
+          
+          <div className="flex-1 p-8 overflow-y-auto">
           {activeSection === "bank" && (
-            <div className="space-y-6">
-              <div className="bg-white p-6 rounded-lg shadow">
-                <h3 className="text-lg font-semibold text-gray-800 mb-4">Add Bank Account</h3>
-                <form onSubmit={handleBankSubmit} className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="max-w-3xl mx-auto space-y-8 border-gray-400 rounded-lg shadow-md">
+              <div className="bg-white rounded-2xl p-8">
+                <h3 className="text-xl font-bold text-[#222B45] mb-6 flex items-center gap-2">
+                  <FaCreditCard className="text-[#554CFF]" /> Add Bank Account
+                </h3>
+                <form onSubmit={handleBankSubmit} className="space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     {["accountNumber", "bankName", "ifscCode", "accountHolderName"].map((field, idx) => (
                       <div key={idx}>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                        <label className="block text-sm font-semibold text-[#505887] mb-2">
                           {field === "accountNumber"
                             ? "Account Number"
                             : field === "bankName"
@@ -301,7 +277,11 @@ function EmployeeDashboard() {
                           type="text"
                           value={bankForm[field]}
                           onChange={(e) => setBankForm({ ...bankForm, [field]: e.target.value })}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          className="w-full px-4 py-3 border border-[#E6E7EC] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#554CFF] text-[#222B45] font-medium text-base shadow-sm"
+                        placeholder={field === "accountNumber" ? "Enter account number" : field === "bankName" ? "e.g. HDFC Bank" : field === "ifscCode" ? "IFSC (e.g. HDFC0001234)" : "Account holder full name"}
+                        inputMode={field === "accountNumber" ? "numeric" : "text"}
+                        maxLength={field === "ifscCode" ? 11 : undefined}
+                        onInput={(e) => { if (field === "ifscCode") e.target.value = e.target.value.toUpperCase(); }}
                           required
                         />
                       </div>
@@ -309,7 +289,7 @@ function EmployeeDashboard() {
                   </div>
                   <button
                     type="submit"
-                    className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                    className="mt-4 bg-[#554CFF] hover:bg-[#3F34D1] transition px-7 py-3 rounded-xl text-white font-bold text-lg shadow"
                   >
                     Add Bank Account
                   </button>
@@ -317,37 +297,32 @@ function EmployeeDashboard() {
               </div>
             </div>
           )}
-        </div>
 
-                  {/* Leave Form Section */}
           {activeSection === "leave" && (
-            <div className="space-y-6">
-              {/* Leave Balance Display */}
-              <div className="bg-white p-6 rounded-lg shadow">
-                <h3 className="text-lg font-semibold text-gray-800 mb-4">Leave Balance</h3>
-                <p className="text-gray-700">
+            <div className="max-w-3xl mx-auto space-y-8 rounded-lg shadow-md bg-white">
+              <div className="rounded-2xl p-8">
+                <h3 className="text-xl font-bold text-[#222B45] mb-4">Leave Balance</h3>
+                <p className="text-[#505887] text-lg">
                   Available Leave Days:{" "}
-                  <span className="font-bold text-blue-600">
+                  <span className="font-bold text-[#554CFF]">
                     {employeeData.leaveBalance ?? "Loading..."}
                   </span>
                 </p>
               </div>
 
-              {/* Apply Leave Form */}
-              <div className="bg-white p-6 rounded-lg shadow">
-                <h3 className="text-lg font-semibold text-gray-800 mb-4">Apply for Leave</h3>
-                <form onSubmit={handleLeaveSubmit} className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+             
+              <div className="rounded-2xl p-8">
+                <h3 className="text-xl font-bold text-[#222B45] mb-6 flex items-center gap-2">
+                  <FaCalendarAlt className="text-[#554CFF]" /> Apply for Leave
+                </h3>
+                <form onSubmit={handleLeaveSubmit} className="space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Leave Type
-                      </label>
+                      <label className="block text-sm font-semibold text-[#505887] mb-2">Leave Type</label>
                       <select
                         value={leaveForm.leaveType}
-                        onChange={(e) =>
-                          setLeaveForm({ ...leaveForm, leaveType: e.target.value })
-                        }
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
+                        onChange={(e) => setLeaveForm({ ...leaveForm, leaveType: e.target.value })}
+                        className="w-full px-4 py-3 border border-[#E6E7EC] rounded-xl bg-white focus:ring-2 focus:ring-[#554CFF] text-[#222B45] font-medium shadow-sm"
                         required
                       >
                         <option value="">Select Leave Type</option>
@@ -358,54 +333,41 @@ function EmployeeDashboard() {
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Reason
-                      </label>
+                      <label className="block text-sm font-semibold text-[#505887] mb-2">Reason</label>
                       <input
                         type="text"
                         value={leaveForm.reason}
-                        onChange={(e) =>
-                          setLeaveForm({ ...leaveForm, reason: e.target.value })
-                        }
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
+                        onChange={(e) => setLeaveForm({ ...leaveForm, reason: e.target.value })}
+                        className="w-full px-4 py-3 border border-[#E6E7EC] rounded-xl focus:ring-2 focus:ring-[#554CFF] text-[#222B45] font-medium shadow-sm"
                         required
                       />
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Start Date
-                      </label>
+                      <label className="block text-sm font-semibold text-[#505887] mb-2">Start Date</label>
                       <input
                         type="date"
                         value={leaveForm.startDate}
-                        onChange={(e) =>
-                          setLeaveForm({ ...leaveForm, startDate: e.target.value })
-                        }
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
+                        onChange={(e) => setLeaveForm({ ...leaveForm, startDate: e.target.value })}
+                        className="w-full px-4 py-3 border border-[#E6E7EC] rounded-xl focus:ring-2 focus:ring-[#554CFF] text-[#222B45] font-medium shadow-sm"
                         required
                       />
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        End Date
-                      </label>
+                      <label className="block text-sm font-semibold text-[#505887] mb-2">End Date</label>
                       <input
                         type="date"
                         value={leaveForm.endDate}
-                        onChange={(e) =>
-                          setLeaveForm({ ...leaveForm, endDate: e.target.value })
-                        }
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
+                        onChange={(e) => setLeaveForm({ ...leaveForm, endDate: e.target.value })}
+                        className="w-full px-4 py-3 border border-[#E6E7EC] rounded-xl focus:ring-2 focus:ring-[#554CFF] text-[#222B45] font-medium shadow-sm"
                         required
                       />
                     </div>
                   </div>
-
                   <button
                     type="submit"
-                    className="px-6 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
+                    className="mt-4 bg-[#16C784] hover:bg-[#108B5E] transition px-7 py-3 rounded-xl text-white font-bold text-lg shadow"
                   >
                     Apply for Leave
                   </button>
@@ -414,43 +376,45 @@ function EmployeeDashboard() {
             </div>
           )}
 
-          {/* Pay History Section */}
-            {activeSection === "history" && (
-              <div className="bg-white p-6 rounded-lg shadow space-y-4">
-                <h3 className="text-lg font-semibold text-gray-800 mb-4">Payment History</h3>
-
-                <table className="min-w-full border border-gray-200 rounded-lg">
-                  <thead>
-                    <tr className="bg-gray-100 text-left">
-                      <th className="py-2 px-4 border-b">Date</th>
-                      <th className="py-2 px-4 border-b">Transaction ID</th>
-                      <th className="py-2 px-4 border-b">Amount (₹)</th>
-                      <th className="py-2 px-4 border-b">Status</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {[
-                      { date: "2025-10-01", id: "TXN924381", amount: 75000, status: "Credited" },
-                      { date: "2025-09-01", id: "TXN918472", amount: 75000, status: "Credited" },
-                      { date: "2025-08-01", id: "TXN903184", amount: 75000, status: "Credited" },
-                    ].map((txn, index) => (
-                      <tr key={index} className="hover:bg-gray-50">
-                        <td className="py-2 px-4 border-b">{txn.date}</td>
-                        <td className="py-2 px-4 border-b">{txn.id}</td>
-                        <td className="py-2 px-4 border-b text-green-600 font-medium">{txn.amount}</td>
-                        <td
-                          className={`py-2 px-4 border-b font-semibold ${
-                            txn.status === "Credited" ? "text-green-600" : "text-red-600"
-                          }`}
-                        >
-                          {txn.status}
-                        </td>
+          {activeSection === "history" && (
+            <div className="max-w-4xl mx-auto bg-white rounded-lg shadow-sm">
+              <div className="rounded-2xl p-8">
+                <h3 className="text-xl font-bold text-[#222B45] mb-6 flex items-center gap-2 tracking-wide">
+                  <FaHistory className="text-[#554CFF]" /> Payment History
+                </h3>
+                <div className="overflow-x-auto">
+                  <table className="min-w-full bg-white rounded-2xl">
+                    <thead>
+                      <tr className="bg-[#F1F0FF] text-left text-[#505887] font-semibold">
+                        <th className="py-3 px-5 uppercase tracking-wide text-xs">Date</th>
+                        <th className="py-3 px-5 uppercase tracking-wide text-xs">Transaction ID</th>
+                        <th className="py-3 px-5 uppercase tracking-wide text-xs">Amount (₹)</th>
+                        <th className="py-3 px-5 uppercase tracking-wide text-xs">Status</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody className="divide-y divide-gray-200">
+                      {[
+                        { date: "2025-10-01", id: "TXN924381", amount: 75000, status: "Credited" },
+                        { date: "2025-09-01", id: "TXN918472", amount: 75000, status: "Credited" },
+                        { date: "2025-08-01", id: "TXN903184", amount: 75000, status: "Credited" },
+                      ].map((txn, index) => (
+                        <tr key={index} className="hover:bg-[#F7F8FA] transition">
+                          <td className="py-3 px-8 font-medium text-[#222B45]">{txn.date}</td>
+                          <td className="py-3 px-8">{txn.id}</td>
+                          <td className="py-3 px-8 text-[#16C784] font-semibold">{txn.amount}</td>
+                          <td className={`py-3 px-8 font-semibold ${txn.status === "Credited" ? "text-[#16C784]" : "text-red-500"}`}>
+                            {txn.status}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               </div>
-            )}
+            </div>
+          )}
+         </div>    
+        </main>
       </div>
     </div>
   );
