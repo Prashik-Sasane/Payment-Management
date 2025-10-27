@@ -1,144 +1,133 @@
-import { useState } from "react";
-import { useApi } from "../hooks/useApi.jsx";
-import { useAuth } from "../context/AuthContext.jsx";
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 
-export default function LoginPage() {
-  const [checked, setChecked] = useState({ gateway: false, links: false });
-  const [email, setEmail] = useState("");
-  const [phone, setPhone] = useState("");
-  const [otpSent, setOtpSent] = useState(false);
-  const [otp, setOtp] = useState("");
-
-  const isFormValid = (checked.gateway || checked.links) && email && phone.length === 10;
+export default function Login() {
+  const navigate = useNavigate();
   const { login } = useAuth();
-  const { loading, error, apiCall } = useApi();
+  const [form, setForm] = useState({ email: "", password: "", role: "employee" });
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+  const handleChange = (e) => {
+    setForm({ ...form, [e.target.name]: e.target.value });
+  };
 
-  // Send OTP
-  const handleSendOtp = async (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
-    if (!isFormValid) return;
+    setLoading(true);
+    setError("");
 
-    const response = await apiCall("/auth/sent-otp", {
-      method: "POST",
-      body: { phone },
-    });
+    try {
+      const res = await fetch("http://localhost:5000/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: form.email, password: form.password , role: form.role })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data?.error || "Login failed");
 
-    if (response && response.message) {
-      setOtpSent(true);
-      alert("OTP sent successfully!");
+       login(data.user, data.token);
+
+      if (data.user?.role === "hr") navigate("/dashboard");
+      else navigate("/employee-dashboard");
+    } catch (err) {
+      setError(err.message);
     }
   };
 
-  // Verify OTP
-  const handleVerifyOtp = async (e) => {
-    e.preventDefault();
-    if (!otp) return;
+  const handleOAuthLogin = (provider) => {
+    setError("");
+    
+    const id = window.prompt(`Paste your ${provider} id (mock)`);
+    if (!id) return;
 
-    const response = await apiCall("/auth/verify-otp", {
-      method: "POST",
-      body: { phone, otp, email },
-    });
+    const mockProviders = {
+      google: { id: "google-123", role: "employee" },
+      github: { id: "github-456", role: "hr" },
+    };
 
-    if (response && response.success) {
-      login({ email, phone });
-      alert("User verified and logged in successfully!");
+    const providerInfo = mockProviders[provider];
+    if (providerInfo && id === providerInfo.id) {
+      localStorage.setItem("role", providerInfo.role);
+      if (providerInfo.role === "hr") navigate("/dashboard");
+      else navigate("/employee-dashboard");
     } else {
-      alert(response?.message || "Invalid OTP");
+      setError(`Invalid ${provider} id. Please try again.`);
     }
   };
 
   return (
-    <div className="flex justify-center items-center min-h-screen bg-[#f3f0fa]">
-      <div className="bg-white rounded-2xl p-8 w-[420px] shadow-2xl">
-        <h2 className="text-2xl font-bold mb-2 text-[#2d1155]">
-          Register your Business with PhonePe Payment Gateway
-        </h2>
+    <div className="min-h-screen flex items-center justify-center bg-gray-100">
+      <div className="bg-white shadow-xl rounded-2xl p-8 w-96 h-[550px]">
+        <h2 className="text-2xl font-bold text-center mb-6 text-gray-800">Payroll System Login</h2>
 
-        <div className="text-sm mb-6 text-gray-700">Which product best fits your business needs?</div>
-
-        <div className="flex gap-7 mb-5">
-          <label className="flex items-center space-x-2">
+        <form onSubmit={handleLogin} className="space-y-4">
+          <div>
+            <label className="block text-gray-700 mb-1 font-medium">Email</label>
             <input
-              type="checkbox"
-              checked={checked.gateway}
-              onChange={() => setChecked(c => ({ ...c, gateway: !c.gateway }))}
-              className="accent-[#8606ec] w-4 h-4"
+              type="email"
+              name="email"
+              value={form.email}
+              onChange={handleChange}
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              placeholder="Enter your email"
+              required
             />
-            <span>Payment Gateway</span>
-          </label>
-          <label className="flex items-center space-x-2">
+          </div>
+
+          <div>
+            <label className="block text-gray-700 mb-1 font-medium">Password</label>
             <input
-              type="checkbox"
-              checked={checked.links}
-              onChange={() => setChecked(c => ({ ...c, links: !c.links }))}
-              className="accent-[#8606ec] w-4 h-4"
+              type="password"
+              name="password"
+              value={form.password}
+              onChange={handleChange}
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              placeholder="Enter your password"
+              required
             />
-            <span>Payment Links</span>
-          </label>
-        </div>
+          </div>
 
-        <input
-          type="email"
-          placeholder="Enter Email ID"
-          value={email}
-          onChange={e => setEmail(e.target.value)}
-          className="w-full mb-3 px-4 py-3 border border-gray-300 rounded-4xl text-base outline-none focus:ring-2 focus:ring-[#8606ec]"
-        />
+          <div>
+            <label className="block text-gray-700 mb-1 font-medium">Login as</label>
+            <select
+              name="role"
+              value={form.role}
+              onChange={handleChange}
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            >
+              <option className="border border-gray-300" value="employee">Employee</option>
+              <option value="hr">HR/Admin</option>
+            </select>
+          </div>
 
-        <div className="flex items-center mb-4">
-          <span className="px-1 text-gray-500">+91</span>
-          <input
-            type="tel"
-            placeholder="XXXXXXXXXX"
-            value={phone}
-            onChange={e => setPhone(e.target.value.replace(/\D/, "").slice(0, 10))}
-            className="flex-1 px-6 py-3 border border-gray-300 rounded-4xl text-base outline-none focus:ring-2 focus:ring-[#8606ec]"
-            maxLength={10}
-          />
+          {error && <p className="text-red-500 text-sm text-center">{error}</p>}
+
           <button
-            onClick={handleSendOtp}
-            disabled={!isFormValid || loading}
-            className={`ml-2 px-4 py-2 rounded-4xl text-sm font-semibold ${
-              isFormValid
-                ? "bg-[#8506ec] text-white hover:bg-[#a566df]"
-                : "bg-[#ece6f9] text-[#a48ace]"
-            }`}
+            type="submit"
+            disabled={loading}
+            className="w-full bg-indigo-600 text-white py-2 rounded-lg hover:bg-indigo-700 transition duration-200"
           >
-            {loading ? "Sending..." : otpSent ? "Resend OTP" : "Send OTP"}
+            {loading ? "Logging in..." : "Login"}
+          </button>
+        </form>
+
+        <div className="mt-4 text-center text-sm text-gray-600">Or login with</div>
+
+        <div className="mt-3 flex flex-col gap-3">
+          <button
+            onClick={() => handleOAuthLogin("google")}
+            className="flex-1 bg-red-500 text-white py-2 rounded-lg hover:bg-red-600 transition duration-200"
+          >
+            Login with Google
+          </button>
+          <button
+            onClick={() => handleOAuthLogin("github")}
+            className="flex-1 bg-gray-800 text-white py-2 rounded-lg hover:bg-black transition duration-200"
+          >
+            Login with GitHub
           </button>
         </div>
-
-        {otpSent && (
-          <input
-            type="text"
-            placeholder="Enter OTP"
-            value={otp}
-            onChange={e => setOtp(e.target.value)}
-            className="w-full mb-3 px-4 py-3 border border-gray-300 rounded-4xl focus:ring-2 focus:ring-[#8606ec]"
-          />
-        )}
-        
-        <button
-          onClick={async (e) => {
-            await handleVerifyOtp(e);
-            // after verification completes, check for an auth marker and navigate to dashboard
-            // adjust the keys below to match how your app stores auth (e.g. 'token' or 'user')
-            const isAuthed = Boolean(localStorage.getItem("token") || localStorage.getItem("user"));
-            if (isAuthed) {
-              window.location.href = "/";
-            }
-          }}
-          disabled={!otpSent || !otp || loading}
-          className={`w-full py-3 rounded-full text-base font-semibold transition ${
-            otpSent && otp
-              ? "bg-[#8506ec] text-white hover:bg-[#a566df]"
-              : "bg-[#ece6f9] text-[#a48ace]"
-          }`}
-        >
-          {loading ? "Processing..." : "PROCEED"}
-        </button>
-
-        {error && <p className="text-red-500 text-sm mt-2">{error}</p>}
       </div>
     </div>
   );

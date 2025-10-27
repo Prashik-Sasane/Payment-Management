@@ -1,307 +1,367 @@
-import React, { useState, useEffect } from "react";
+import React from "react";
 import { Link } from "react-router-dom";
 import {
-  FaUniversity,
-  FaPaperPlane,
-  FaHistory,
   FaUserCircle,
-  FaBolt,
-  FaLock,
-  FaSpinner,
-  FaMobileAlt,
+  FaTasks,
+  FaCog,
+  FaThLarge,
   FaUsers,
-  FaChartLine,
-  FaShieldAlt,
-  FaUserShield,
-  FaExclamationTriangle
+  FaQuestionCircle,
 } from "react-icons/fa";
+import { Bar } from "react-chartjs-2";
+import {
+  Chart as ChartJS,
+  BarElement,
+  CategoryScale,
+  LinearScale,
+  Tooltip,
+  Legend,
+} from "chart.js";
 
-const images = [
-  "https://i0.wp.com/blogrevamp.cashfree.com/wp-content/uploads/2023/07/Payment-Success-Rate.png?fit=1200%2C800&ssl=1",
-  "https://i0.wp.com/blogrevamp.cashfree.com/wp-content/uploads/2023/02/Cashfree-Secure-Payment-Gateway.png?fit=1200%2C800&ssl=1",
-  "https://i0.wp.com/blogrevamp.cashfree.com/wp-content/uploads/2023/12/multiple-payment-gateway-blog.png?fit=2400%2C1600&ssl=1",
-  "https://i0.wp.com/blogrevamp.cashfree.com/wp-content/uploads/2023/05/Cashfree-Payment-Gateway-for-startups.png?fit=2500%2C1667&ssl=1"
-];
+ChartJS.register(BarElement, CategoryScale, LinearScale, Tooltip, Legend);
 
-function ImageSlider() {
-  const [current, setCurrent] = useState(0);
-  const length = images.length;
+const stackedBarData = {
+  labels: [
+    "Jan",
+    "Feb",
+    "Mar",
+    "Apr",
+    "May",
+    "Jun",
+    "Jul",
+    "Aug",
+    "Sep",
+    "Oct",
+    "Nov",
+    "Dec",
+  ],
+  datasets: [
+    {
+      label: "Net Pay",
+      data: [1350000, 1450000, 1250000, 1500000, 1400000, 1550000, 1600000, 1580000, 1620000, 1670000, 1720000, 1800000],
+      backgroundColor: "#0ea5e9",
+      borderRadius: 6,
+      stack: "combined",
+    },
+    {
+      label: "Taxes",
+      data: [150000, 180000, 160000, 190000, 170000, 185000, 200000, 210000, 195000, 220000, 230000, 240000],
+      backgroundColor: "#6366f1",
+      borderRadius: 6,
+      stack: "combined",
+    },
+    {
+      label: "Statutories",
+      data: [50000, 55000, 52000, 56000, 54000, 57000, 59000, 61000, 60000, 63000, 65000, 67000],
+      backgroundColor: "#a78bfa",
+      borderRadius: 6,
+      stack: "combined",
+    },
+    {
+      label: "Deductions",
+      data: [290000, 310000, 300000, 330000, 320000, 340000, 350000, 360000, 370000, 380000, 390000, 400000],
+      backgroundColor: "#fca5a5",
+      borderRadius: 6,
+      stack: "combined",
+    },
+  ],
+};
 
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrent((prev) => (prev === length - 1 ? 0 : prev + 1));
-    }, 4000);
-    return () => clearInterval(timer);
-  }, [length]);
+const stackedBarOptions = {
+  responsive: true,
+  maintainAspectRatio: false,
+  plugins: {
+    legend: {
+      position: "top",
+      labels: {
+        usePointStyle: true,
+        pointStyle: "circle",
+        padding: 20,
+        color: "#374151",
+      },
+    },
+    tooltip: {
+      backgroundColor: "#fff",
+      titleColor: "#000",
+      bodyColor: "#000",
+      borderColor: "#e5e7eb",
+      // borderWidth: 1,
+      callbacks: {
+        label: (context) => {
+          const label = context.dataset.label || "";
+          const value = context.parsed.y.toLocaleString("en-IN", {
+            style: "currency",
+            currency: "INR",
+            maximumFractionDigits: 2,
+          });
+          return ` ${label}: ${value}`;
+        },
+      },
+    },
+  },
+  scales: {
+    x: {
+      stacked: true,
+      grid: { display: false },
+    },
+    y: {
+      stacked: true,
+      grid: { color: "#f1f5f9" },
+      ticks: {
+        callback: (value) => value / 1000 + "K",
+      },
+    },
+  },
+};
 
+function Sidebar() {
   return (
-    <div className="w-full h-[600px] relative overflow-hidden rounded-4xl shadow-lg mb-8">
-      {images.map((img, index) => (
-        <img
-          key={index}
-          src={img}
-          alt={`slide-${index}`}
-          className={`absolute top-0 left-0 w-full h-[600px] p-1 rounded-4xl object-cover transition-opacity duration-1000 ${
-            index === current ? "opacity-100" : "opacity-0"
-          }`}
-        />
-      ))}
-    </div>
+    <aside className="w-72 h-screen sticky top-0 bg-white border-r border-gray-200 flex flex-col px-6 py-8 overflow-auto">
+      <div className="flex items-center mb-10">
+        <FaUserCircle size={42} className="text-sky-500 mr-3" />
+        <div>
+          <div className="font-bold">Rajesh Sharma</div>
+          <div className="text-xs text-gray-600">HR Manager</div>
+        </div>
+      </div>
+      <nav className="flex flex-col gap-2 mb-10">
+        <a
+          href="#"
+          className="flex items-center gap-3 px-3 py-2 rounded font-medium text-sky-500 bg-sky-50"
+        >
+          <FaThLarge className="text-lg" /> Dashboard
+        </a>
+
+        <Link
+          to="/payruns"
+          className="flex items-center gap-3 px-3 py-2 rounded font-medium text-sky-700 hover:bg-sky-100 transition"
+        >
+          <FaUsers className="text-lg" /> Payroll
+        </Link>
+        <Link
+          to="/employees"
+          className="flex items-center gap-3 px-3 py-2 rounded font-medium text-sky-700 hover:bg-sky-100 transition"
+        >
+          <FaUsers className="text-lg" /> Employees
+        </Link>
+        <a
+          href="#"
+          className="flex items-center gap-3 px-3 py-2 rounded font-medium text-sky-700 hover:bg-sky-100 transition"
+        >
+          <FaTasks className="text-lg" /> Tasks
+          <span className="ml-2 bg-red-500 text-white rounded-full px-2 text-xs">
+            2
+          </span>
+        </a>
+      </nav>
+      <div className="flex flex-col gap-2">
+        <a
+          href="#"
+          className="flex items-center gap-3 px-3 py-2 rounded font-medium text-gray-600 hover:bg-gray-100 transition"
+        >
+          <FaQuestionCircle className="text-lg" /> Help Center
+        </a>
+        <a
+          href="#"
+          className="flex items-center gap-3 px-3 py-2 rounded font-medium text-gray-600 hover:bg-gray-100 transition"
+        >
+          <FaCog className="text-lg" /> Settings
+        </a>
+      </div>
+      <div className="mt-auto pt-10 flex items-center gap-2 text-xs text-gray-400">
+        <div className="rounded-md bg-sky-100 p-1 text-sky-500 font-bold">H</div>
+        <span>Happytech</span>
+      </div>
+    </aside>
+  );
+}
+
+function EmployeeRow({ name, email, gross, taxes, net, perf, status, avatar, role }) {
+  const perfColor =
+    perf === "Good"
+      ? "text-green-500"
+      : perf === "Moderate"
+      ? "text-yellow-500"
+      : "text-red-500";
+  const statusBg =
+    status === "PAID"
+      ? "bg-green-100 text-green-700"
+      : status === "PENDING"
+      ? "bg-yellow-100 text-yellow-700"
+      : "bg-red-100 text-red-700";
+  return (
+    <tr className="border-b border-gray-300">
+      <td className="py-3 px-2 flex items-center gap-2">
+        <img src={avatar} alt={name} className="w-7 h-7 rounded-full" />
+        <span>
+          <div className="font-medium">{name}</div>
+          <div className="text-xs text-gray-400 uppercase font-medium">{role}</div>
+        </span>
+      </td>
+      <td className="py-3 px-2 text-sm font-medium">{email}</td>
+      <td className="py-3 px-2 text-sm font-medium">{gross}</td>
+      <td className="py-3 px-2 text-sm text-red-500 font-medium">{taxes}</td>
+      <td className="py-3 px-2 text-sm font-medium">{net}</td>
+      <td className={`py-3 px-2 text-sm font-semibold ${perfColor}`}>{perf}</td>
+      <td className="py-3 px-2">
+        <span className={`text-xs rounded-full py-1 px-2 ${statusBg} font-medium`}>
+          {status}
+        </span>
+      </td>
+    </tr>
   );
 }
 
 export default function Dashboard() {
-  const features = [
-    {
-      icon: <FaBolt className="text-4xl text-purple-400" />,
-      title: "Instant Payments",
-      description: "Send and receive money in real-time with zero delays."
-    },
-    {
-      icon: <FaLock className="text-4xl text-purple-400" />,
-      title: "Bank-Level Security",
-      description: "Advanced encryption and multi-factor authentication protect your funds."
-    },
-    {
-      icon: <FaSpinner className="text-4xl text-purple-400" />,
-      title: "Seamless Experience",
-      description: "Smooth and fast UI ensuring effortless transactions every time."
-    },
-    {
-      icon: <FaMobileAlt className="text-4xl text-purple-400" />,
-      title: "Any Device Access",
-      description: "Use our app on mobile or desktop – anytime, anywhere."
-    },
-    {
-      icon: <FaUsers className="text-4xl text-purple-400" />,
-      title: "Wide Payment Options",
-      description: "Support for UPI, cards, wallets, and net banking."
-    },
-    {
-      icon: <FaChartLine className="text-4xl text-purple-400" />,
-      title: "Detailed Insights",
-      description: "Track your spending and payments with intuitive dashboards."
-    }
-  ];
-
   return (
-    <>
-      <div className="min-h-screen bg-gradient-to-br flex flex-col items-center">
-        <ImageSlider />
+    <div className="flex bg-white min-h-screen font-sans">
+      <Sidebar />
+      <main className="flex-1 p-4 px-6">
+        <header>
+          <h1 className="text-3xl font-medium mb-2">Payroll</h1>
+        </header>
+        <div className="grid grid-cols-3 gap-6 mb-10">
+          {/* Payroll Cost Summary (Stacked Chart) */}
+          <div className="col-span-2 rounded-2xl vgt f687p-7">
+            <div className="font-bold text-lg mb-2">Payroll Cost Summary</div>
+            <div className="h-64">
+              <Bar data={stackedBarData} options={stackedBarOptions} />
+            </div>
+          </div>
 
-       
-        <div className="w-full px-0 py-12 flex flex-col items-center">
-          <h1 className="text-6xl font-bold text-[#5443cf] mb-4 tracking-tight drop-shadow-lg">
-            Welcome to PayFlow
-          </h1>
-          <span className="bg-white bg-opacity-70 rounded-full px-6 py-2 text-[#5443cf] font-semibold shadow hover:bg-[#2e19cf] hover:text-white">
-            All your payments in one place
-          </span>
+          {/* Payment Status */}
+          <div>
+            <div className="bg-white rounded-2xl p-6 mb-5 border border-gray-200">
+              <div className="font-bold text-md mb-3">Payment Status</div>
+              <div className="text-lg font-bold mb-1">
+                2,400 <span className="text-xs font-normal">Employees</span>
+              </div>
+              <div className="flex gap-2 mb-2">
+                <div className="flex-1 h-2 bg-sky-400 rounded-full"></div>
+                <div className="flex-1 h-2 bg-yellow-400 rounded-full"></div>
+                <div className="flex-1 h-2 bg-purple-400 rounded-full"></div>
+              </div>
+              <div className="flex justify-between text-xs font-medium mb-2">
+                <span className="text-sky-400">68% Paid</span>
+                <span className="text-yellow-500">17% Pending</span>
+                <span className="text-purple-600">15% Unpaid</span>
+              </div>
+            </div>
+
+            {/* Employee Time-off */}
+            <div className="bg-white rounded-2xl shadow p-6 border-t-4 border-indigo-500">
+              <div className="font-bold text-md mb-3">
+                Employee Time-off{" "}
+                <span className="float-right text-xs text-indigo-500 cursor-pointer">
+                  View all
+                </span>
+              </div>
+              <div className="flex flex-col gap-2 text-sm">
+                <div className="flex items-center justify-between border-b pb-2 border-gray-300">
+                  <span className="flex items-center gap-2">
+                    <img
+                      alt="Aarav"
+                      className="w-6 h-6 rounded-full"
+                      src="https://randomuser.me/api/portraits/men/12.jpg"
+                    />{" "}
+                    Aarav Patel{" "}
+                    <span className="text-xs text-gray-400">Sick Leave</span>
+                  </span>
+                  <span className="text-red-400 font-medium">12 - 14 Oct 2025</span>
+                </div>
+                <div className="flex items-center justify-between border-b pb-2 border-gray-300">
+                  <span className="flex items-center gap-2">
+                    <img
+                      alt="Priya"
+                      className="w-6 h-6 rounded-full"
+                      src="https://randomuser.me/api/portraits/women/45.jpg"
+                    />{" "}
+                    Priya Mehta{" "}
+                    <span className="text-xs text-gray-400">Vacation</span>
+                  </span>
+                  <span className="text-red-400 font-medium">20 - 25 Oct 2025</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="flex items-center gap-2">
+                    <img
+                      alt="Rohan"
+                      className="w-6 h-6 rounded-full"
+                      src="https://randomuser.me/api/portraits/men/50.jpg"
+                    />{" "}
+                    Rohan Kumar{" "}
+                    <span className="text-xs text-gray-400">Family Event</span>
+                  </span>
+                  <span className="text-red-400 font-medium">28 - 31 Oct 2025</span>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
 
         
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8 w-full max-w-4xl px-6">
-          <Link
-            to="/select-bank"
-            className="group bg-gray-100 rounded-2xl flex flex-col items-center py-8 hover:-translate-y-2 transition transform hover:shadow-2xl border border-gray-300"
-          >
-            <FaUniversity className="text-[#7a6af2] text-3xl mb-3 group-hover:scale-110 transition duration-300 w-12 h-12 rounded-4xl border border-gray-500 bg-[#2a1f81]" />
-            <span className="text-lg font-semibold text-[#5443cf]">Select Bank</span>
-          </Link>
-          <Link
-            to="/send-money"
-            className="group bg-gray-100 rounded-2xl flex flex-col items-center py-8 hover:-translate-y-2 transition transform hover:shadow-2xl border border-gray-300 "
-          >
-            <FaPaperPlane className="text-[#7a6af2] text-4xl mb-3 group-hover:scale-110 transition w-12 h-12 rounded-4xl border border-gray-500 duration-300 bg-[#2a1f81]" />
-            <span className="text-lg font-semibold text-[#5443cf]">Send Money</span>
-          </Link>
-          <Link
-            to="/transactions"
-            className="group bg-gray-100 rounded-2xl flex flex-col items-center py-8 hover:-translate-y-2 transition transform hover:shadow-2xl border border-gray-300"
-          >
-            <FaHistory className="text-[#7a6af2] text-4xl mb-3 group-hover:scale-110 transition w-12 h-12 rounded-4xl border border-gray-500 duration-300 bg-[#2a1f81]" />
-            <span className="text-lg font-semibold text-[#5443cf]">Transaction History</span>
-          </Link>
-          <Link
-            to="/profile"
-            className="group bg-gray-100 rounded-2xl flex flex-col items-center py-8 hover:-translate-y-2 transition transform hover:shadow-2xl border border-gray-300"
-          >
-            <FaUserCircle className="text-[#A66CFF] text-4xl mb-3 group-hover:scale-110 transition w-12 h-12 rounded-4xl border border-gray-500 duration-300 bg-[#2a1f81]" />
-            <span className="text-lg font-semibold text-[#5443cf]">Profile</span>
-          </Link>
-
-          <div className="flex flex-col col-span-1 md:col-span-4 items-center w-full">
-            <section className="bg-gradient-to-br from-[#3b0a45] to-[#6b21a8] text-white py-16 px-6 w-6xl rounded-2xl mt-16">
-              <h2 className="text-4xl font-extrabold text-center mb-12">
-                Simple, Fast & Secure Transactions
-              </h2>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-10 max-w-5xl mx-auto">
-                {features.map(({ icon, title, description }) => (
-                  <div
-                    key={title}
-                    className="flex flex-col items-center text-center p-6 bg-purple-900 bg-opacity-30 rounded-xl shadow-lg hover:shadow-purple-700 transition"
-                  >
-                    <div className="mb-4">{icon}</div>
-                    <h3 className="text-xl font-semibold mb-2">{title}</h3>
-                    <p className="text-purple-200 max-w-xs">{description}</p>
-                  </div>
-                ))}
-              </div>
-            </section>
-          </div>
-          <div className="flex flex-col col-span-1 md:col-span-4 items-center w-full">
-           <section className="bg-white w-6xl rounded-2xl p-10 text-[#2d1c56] mt-16">
-          <h2 className="text-3xl font-bold mb-8 text-center text-[#402977]">
-            Safety & Trust
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-8 text-center">
-            <div>
-              <FaShieldAlt className="mx-auto text-5xl mb-4 text-[#402977]" />
-              <h3 className="text-xl font-semibold mb-2">Your Safety Comes First</h3>
-              <p className="text-purple-600">
-                We prioritize your security with industry-leading measures.
-              </p>
-            </div>
-            <div>
-              <FaLock className="mx-auto text-5xl mb-4 text-[#402977]" />
-              <h3 className="text-xl font-semibold mb-2">Secure from the Start</h3>
-              <p className="text-purple-600">
-                Every transaction is encrypted with cutting-edge protocols.
-              </p>
-            </div>
-            <div>
-              <FaUserShield className="mx-auto text-5xl mb-4 text-[#402977]" />
-              <h3 className="text-xl font-semibold mb-2">Payment Privacy</h3>
-              <p className="text-purple-600">
-                Your payment data is confidential and protected at all times.
-              </p>
-            </div>
-            <div>
-              <FaExclamationTriangle className="mx-auto text-5xl mb-4 text-[#402977]" />
-              <h3 className="text-xl font-semibold mb-2">Risk Assessment</h3>
-              <p className="text-purple-600">
-                Continuous monitoring to identify and prevent fraudulent activity.
-              </p>
-            </div>
-          </div>
-        </section>
+        <div className="bg-white rounded-2xl shadow p-7 border-t-4 border-sky-500">
+          <div className="text-lg font-bold mb-3">Employee Summary</div>
+          <table className="min-w-full border-collapse">
+            <thead>
+              <tr className="text-left bg-slate-50">
+                <th className="py-2 px-2 font-medium text-sm uppercase">Employee Name</th>
+                <th className="py-2 px-2 font-medium text-sm uppercase">Email</th>
+                <th className="py-2 px-2 font-medium text-sm uppercase">Gross</th>
+                <th className="py-2 px-2 font-medium text-sm uppercase">Taxes</th>
+                <th className="py-2 px-2 font-medium text-sm uppercase">Net Salary</th>
+                <th className="py-2 px-2 font-medium text-sm uppercase">Performance</th>
+                <th className="py-2 px-2 font-medium text-sm uppercase">Status</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y">
+              <EmployeeRow
+                name="Aarav Patel"
+                email="aarav.patel@company.in"
+                gross="₹1,10,000"
+                taxes="-₹11,000"
+                net="₹99,000"
+                perf="Good"
+                status="PAID"
+                avatar="https://randomuser.me/api/portraits/men/12.jpg"
+                role="Software Engineer"
+              />
+              <EmployeeRow
+                name="Priya Mehta"
+                email="priya.mehta@company.in"
+                gross="₹95,000"
+                taxes="-₹9,500"
+                net="₹85,500"
+                perf="Moderate"
+                status="PENDING"
+                avatar="https://randomuser.me/api/portraits/women/45.jpg"
+                role="Data Analyst"
+              />
+              <EmployeeRow
+                name="Rohan Kumar"
+                email="rohan.kumar@company.in"
+                gross="₹85,000"
+                taxes="-₹8,500"
+                net="₹76,500"
+                perf="Good"
+                status="PAID"
+                avatar="https://randomuser.me/api/portraits/men/50.jpg"
+                role="Marketing Manager"
+              />
+              <EmployeeRow
+                name="Neha Singh"
+                email="neha.singh@company.in"
+                gross="₹70,000"
+                taxes="-₹7,000"
+                net="₹63,000"
+                perf="Poor"
+                status="UNPAID"
+                avatar="https://randomuser.me/api/portraits/women/62.jpg"
+                role="Accountant"
+              />
+            </tbody>
+          </table>
         </div>
-        </div>
-
-        {/* Footer or actions */}
-        <div className="mt-10 text-center text-[#5443cf] text-sm opacity-70">
-          Secured by UPI • Powered by PayFlow
-        </div>
-      </div>
-
-      <footer className="bg-[#1e1e2f] text-gray-300 py-12 px-6 mt-12">
-        <div className="max-w-7xl mx-auto grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8">
-          {/* About Us */}
-          <div>
-            <h3 className="text-white text-lg font-semibold mb-4">About Us</h3>
-            <p className="text-sm leading-relaxed">
-              We provide seamless payment gateway solutions and e-commerce integrations to empower businesses worldwide.
-            </p>
-            <p className="text-sm mt-4">© 2025 PayFlow. All rights reserved.</p>
-          </div>
-
-          {/* Solutions */}
-          <div>
-            <h3 className="text-white text-lg font-semibold mb-4">Solutions</h3>
-            <ul className="space-y-2 text-sm">
-              <li>
-                <a href="/solutions/payment" className="hover:text-white transition">
-                  Payment Gateway
-                </a>
-              </li>
-              <li>
-                <a href="/solutions/e-commerce" className="hover:text-white transition">
-                  E-commerce Solutions
-                </a>
-              </li>
-              <li>
-                <a href="/solutions/invoice" className="hover:text-white transition">
-                  Invoice Management
-                </a>
-              </li>
-              <li>
-                <a href="/solutions/analytics" className="hover:text-white transition">
-                  Analytics & Reporting
-                </a>
-              </li>
-            </ul>
-          </div>
-
-          {/* Company */}
-          <div>
-            <h3 className="text-white text-lg font-semibold mb-4">Company</h3>
-            <ul className="space-y-2 text-sm">
-              <li>
-                <a href="/about" className="hover:text-white transition">
-                  About Us
-                </a>
-              </li>
-              <li>
-                <a href="/career" className="hover:text-white transition">
-                  Career
-                </a>
-              </li>
-              <li>
-                <a href="/blog" className="hover:text-white transition">
-                  Blog
-                </a>
-              </li>
-              <li>
-                <a href="/contact" className="hover:text-white transition">
-                  Contact
-                </a>
-              </li>
-            </ul>
-          </div>
-
-          {/* Support */}
-          <div>
-            <h3 className="text-white text-lg font-semibold mb-4">Support & Legal</h3>
-            <ul className="space-y-2 text-sm">
-              <li>
-                <a href="/help" className="hover:text-white transition">
-                  Help Center
-                </a>
-              </li>
-              <li>
-                <a href="/terms" className="hover:text-white transition">
-                  Terms & Conditions
-                </a>
-              </li>
-              <li>
-                <a href="/privacy" className="hover:text-white transition">
-                  Privacy Policy
-                </a>
-              </li>
-              <li>
-                <a href="/refunds" className="hover:text-white transition">
-                  Refund Policy
-                </a>
-              </li>
-            </ul>
-            <div className="mt-6 flex space-x-4">
-              <a href="https://facebook.com" className="hover:text-white">
-                <i className="fab fa-facebook-f" />
-              </a>
-              <a href="https://twitter.com" className="hover:text-white">
-                <i className="fab fa-twitter" />
-              </a>
-              <a href="https://linkedin.com" className="hover:text-white">
-                <i className="fab fa-linkedin-in" />
-              </a>
-              <a href="https://instagram.com" className="hover:text-white">
-                <i className="fab fa-instagram" />
-              </a>
-            </div>
-          </div>
-        </div>
-      </footer>
-    </>
+      </main>
+    </div>
   );
 }
-
