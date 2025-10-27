@@ -1,36 +1,22 @@
-// const jwt = require('jsonwebtoken');
-// const { getUserById } = require('../models/userModel');
+const jwt = require("jsonwebtoken");
 
-// const authenticateToken = (req, res, next) => {
-//   const authHeader = req.headers['authorization'];
-//   const token = authHeader && authHeader.split(' ')[1]; 
+const verifyToken = (req, res, next) => {
+  const authHeader = req.headers.authorization;
 
-//   if (!token) {
-//     return res.status(401).json({ error: 'Access token required' });
-//   }
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    return res.status(401).json({ error: "Unauthorized: No token provided" });
+  }
 
-//   jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key', (err, decoded) => {
-//     if (err) {
-//       return res.status(403).json({ error: 'Invalid or expired token' });
-//     }
+  const token = authHeader.split(" ")[1];
 
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    req.user = decoded; 
+    next();
+  } catch (err) {
+    return res.status(401).json({ error: "Unauthorized: Invalid token" });
+  }
+};
 
-//     getUserById(decoded.userId, (err, user) => {
-//       if (err || !user) {
-//         return res.status(403).json({ error: 'User not found' });
-//       }
-      
-//       req.user = user;
-//       next();
-//     });
-//   });
-// };
+module.exports = verifyToken;
 
-// const generateToken = (userId) => {
-//   return jwt.sign({ userId }, process.env.JWT_SECRET || 'your-secret-key', { expiresIn: '24h' });
-// };
-
-// module.exports = {
-//   authenticateToken,
-//   generateToken
-// };

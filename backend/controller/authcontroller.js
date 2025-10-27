@@ -1,42 +1,88 @@
-const { createUser, getUserByPhone } = require("../models/User");
-const { generateOTP } = require("../utils/generateOTP");
-const { sendSMS } = require("../utils/sendSMS");
+const bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken");
+const db = require("../config/db");
 
-let otpStore = {}; // temporary in-memory OTP store
+const registerUser = async (req, res) => {
+  try {
+    const { name, email, password, role } = req.body;
 
-const sendOtp = (req, res) => {
-  const { phone } = req.body;
-  if (!phone) return res.status(400).json({ message: "Phone is required" });
+    if (!name || !email || !password || !role) {
+      return res.status(400).json({ error: "All fields are required" });
+    }
 
-  const otp = generateOTP();
-  otpStore[phone] = otp;
+    const [existingUser] = await db.query("SELECT * FROM users WHERE email = ?", [email]);
+    if (existingUser.length > 0) {
+      return res.status(400).json({ error: "User already exists" });
+    }
 
-  sendSMS(phone, `Your OTP is ${otp}`);
-  res.json({ message: "OTP sent successfully" });
-};
+    const hashedPassword = await bcrypt.hash(password, 10);
 
-const verifyOtp = (req, res) => {
-  const { phone, otp, email } = req.body;
-  if (!phone || !otp) return res.status(400).json({ message: "Phone and OTP required" });
-   console.log("OTP Store:", otpStore, "Received OTP:", otp);
-  if (otpStore[phone] && otpStore[phone].toString() === otp.toString()) {
-    getUserByPhone(phone, (err, results) => {
-      if (err) return res.status(500).json(err);
+    await db.query(
+      "INSERT INTO users (name, email, password, role) VALUES (?, ?, ?, ?)",
+      [name, email, hashedPassword, role]
+    );
 
-      if (results.length === 0) {
-        createUser(email, phone, (err) => {
-          if (err) return res.status(500).json(err);
-          delete otpStore[phone];
-          return res.json({ success: true, message: "User created and verified" });
-        });
-      } else {
-        delete otpStore[phone];
-        return res.json({ success: true, message: "User verified" });
-      }
+    // Fetch newly created user
+    const [newUser] = await db.query("SELECT * FROM users WHERE email = ?", [email]);
+
+    // Generate JWT
+    const token = jwt.sign(
+      { id: newUser[0].id, role: newUser[0].role },
+      process.env.JWT_SECRET,
+      { expiresIn: "1h" }
+    );
+
+    res.json({
+      message: "User registered successfully",
+      user: {
+        id: newUser[0].id,
+        name: newUser[0].name,
+        email: newUser[0].email,
+        role: newUser[0].role,
+        employeeId: newUser[0].id, // optional: separate employeeId if needed
+      },
+      token,
     });
-  } else {
-    res.status(400).json({ success: false, message: "Invalid OTP" });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Server error" });
   }
 };
 
-module.exports = { sendOtp, verifyOtp };
+const loginUser = async (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    const [user] = await db.query("SELECT * FROM users WHERE email = ?", [email]);
+    if (user.length === 0) {
+      return res.status(400).json({ error: "Invalid email or password" });
+    }
+
+    const validPassword = await bcrypt.compare(password, user[0].password);
+    if (!validPassword) {
+      return res.status(400).json({ error: "Invalid email or password" });
+    }
+
+    const token = jwt.sign(
+      { id: user[0].id, role: user[0].role },
+      process.env.JWT_SECRET,
+      { expiresIn: "1h" }
+    );
+
+    res.json({
+      token,
+      user: {
+        id: user[0].id,
+        name: user[0].name,
+        email: user[0].email,
+        role: user[0].role,
+        employeeId: user[0].employeeId
+      },
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Server error" });
+  }
+};
+
+module.exports = {registerUser , loginUser }
