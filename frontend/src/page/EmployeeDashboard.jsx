@@ -126,7 +126,6 @@ function EmployeeDashboard() {
     { id: "history", label: "Pay History", icon: <FaHistory /> },
     { id: "leave", label: "Leave Form", icon: <FaFileAlt /> },
   ];
-
   return (
     <div className="flex min-h-screen font-sans bg-white">
       {/* Sidebar */}
@@ -338,6 +337,7 @@ function EmployeeDashboard() {
                         type="text"
                         value={leaveForm.reason}
                         onChange={(e) => setLeaveForm({ ...leaveForm, reason: e.target.value })}
+                        placeholder="Enter Your Reason"
                         className="w-full px-4 py-3 border border-[#E6E7EC] rounded-xl focus:ring-2 focus:ring-[#554CFF] text-[#222B45] font-medium shadow-sm"
                         required
                       />

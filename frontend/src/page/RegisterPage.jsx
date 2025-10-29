@@ -26,7 +26,9 @@ const RegisterPage = () => {
       console.log("Register payload:", form);
       const res = await register(form); 
       alert(res.message || "Registration successful!");
-      navigate("/employee-dashboard");
+
+      if (form.role === "hr") navigate("/dashboard");
+      else navigate("/employee-dashboard");
     } catch (error) {
       alert(error.response?.data?.error || error.message || "Error registering user");
     } finally {
