@@ -1,247 +1,154 @@
-# Payment Management System
+# Payroll Management System
 
-A comprehensive payment management system built with React frontend and Node.js backend, featuring secure money transfers, bank account management, and transaction tracking.
+Centralized payroll and payments platform with employee management, bank account handling, transaction history, rewards, and payroll processing. This repository contains a frontend (React + Vite) and a backend (Node.js + Express + MySQL).
+
+## Quick links
+- Frontend: ./frontend
+- Backend: ./backend
+- DB schema: ./backend/config/database.sql
 
 ## Features
+- User authentication (login / register)
+- Employee data management (CRUD)
+- Bank account management for users/employees
+- Transaction history and payroll runs
+- Rewards management
+- REST API for integration with frontend
 
-### 🔐 Authentication
-- User registration and login
-- JWT-based authentication
-- Secure password hashing with bcrypt
+## Technology stack
+- Frontend: React, Vite, Tailwind/CSS
+- Backend: Node.js, Express
+- Database: MySQL
+- Authentication: JWT / middleware (see backend/middleware/auth.js)
+- Payments: Razorpay (integration points in backend controllers)
 
-### 💰 Payment Features
-- **Money Transfer**: Send money to other users by username
-- **Add Money**: Deposit money from bank accounts to wallet
-- **Transaction History**: Complete transaction tracking with status updates
-- **Real-time Balance**: Live wallet balance updates
+## Repository structure (high level)
+- backend/
+  - app.js
+  - .env
+  - config/
+    - db.js
+    - database.sql
+  - controller/
+    - authcontroller.js
+    - bankcontroller.js
+    - employeecontroller.js
+    - transactioncontroller.js
+  - middleware/
+    - auth.js
+  - models/
+    - User.js
+    - Bank.js
+    - Transaction.js
+    - Reward.js
+  - routes/
+    - authRoutes.js
+    - bankRoutes.js
+    - employeeDataRoutes.js
+    - transactionRoutes.js
+- frontend/
+  - index.html
+  - src/
+    - main.jsx
+    - App.jsx
+    - components/
+    - page/
+    - context/
+    - hooks/
+  - package.json
 
-### 🏦 Bank Account Management
-- Add multiple bank accounts
-- Set primary bank account
-- Secure account information storage
-- IFSC code validation
+## Setup / Getting started
 
-### 📊 Dashboard
-- Overview with wallet balance, bank accounts, and transaction counts
-- Recent transactions display
-- Comprehensive transaction history
-- Modern, responsive UI
-
-## Tech Stack
-
-### Frontend
-- **React 19** - Modern React with hooks
-- **Material-UI** - Beautiful, responsive components
-- **React Router** - Client-side routing
-- **Axios** - HTTP client for API calls
-- **React Toastify** - User notifications
-- **Context API** - State management
-
-### Backend
-- **Node.js** - Runtime environment
-- **Express.js** - Web framework
-- **MySQL** - Database
-- **JWT** - Authentication tokens
-- **bcryptjs** - Password hashing
-- **CORS** - Cross-origin resource sharing
-
-## Database Schema
-
-The system uses MySQL with the following main tables:
-
-- **users** - User accounts and wallet balances
-- **bank_accounts** - Linked bank account information
-- **transactions** - All payment transactions
-- **transaction_logs** - Audit trail for transactions
-- **payment_methods** - Additional payment methods
-
-## Installation & Setup
-
-### Prerequisites
-- Node.js (v16 or higher)
-- MySQL (v8.0 or higher)
+Prerequisites
+- Node.js (16+ recommended)
 - npm or yarn
+- MySQL server
 
-### Backend Setup
-
-1. **Navigate to backend directory**
-   ```bash
+Backend
+1. Open terminal:
    cd backend
-   ```
-
-2. **Install dependencies**
-   ```bash
+2. Install dependencies:
    npm install
-   ```
+3. Create a MySQL database and run the SQL in backend/config/database.sql to create required tables.
+4. Create .env in backend with at least:
+   - PORT=5000
+   - DB_HOST=localhost
+   - DB_USER=your_mysql_user
+   - DB_PASSWORD=your_mysql_password
+   - DB_NAME=your_database_name
+   - JWT_SECRET=your_jwt_secret
+   - RAZORPAY_KEY=...
+   - RAZORPAY_SECRET=...
+5. Start backend:
+   npm run start
+   (or node app.js / nodemon app.js)
 
-3. **Set up environment variables**
-   Create a `.env` file in the backend directory:
-   ```env
-   DB_HOST=localhost
-   DB_USER=root
-   DB_PASSWORD=12410279
-   DB_NAME=payment
-   PORT=4000
-   NODE_ENV=development
-   FRONTEND_URL=http://localhost:5173
-   JWT_SECRET=your-super-secret-jwt-key-change-this-in-production
-   ```
-
-4. **Set up MySQL database**
-   - Create a MySQL database named `payment`
-   - Run the SQL script from `backend/config/database.sql` to create tables
-
-5. **Start the backend server**
-   ```bash
-   npm run dev
-   ```
-   The server will run on `http://localhost:4000`
-
-### Frontend Setup
-
-1. **Navigate to frontend directory**
-   ```bash
+Frontend
+1. Open terminal:
    cd frontend
-   ```
-
-2. **Install dependencies**
-   ```bash
+2. Install dependencies:
    npm install
-   ```
-
-3. **Start the development server**
-   ```bash
+3. Configure any environment / Firebase in src/components/firebase.js (if used).
+4. Start dev server:
    npm run dev
-   ```
-   The frontend will run on `http://localhost:5173`
+5. Open: http://localhost:5173 (default Vite port)
 
-## API Endpoints
+## API overview
 
-### Authentication
-- `POST /api/user/register` - User registration
-- `POST /api/user/login` - User login
-- `GET /api/user/profile` - Get user profile
+Check backend/routes/*.js for exact endpoints and payloads. Common routes include:
 
-### Bank Accounts
-- `POST /api/user/addbank` - Add bank account
-- `GET /api/user/banks` - Get user's bank accounts
-- `PUT /api/user/banks/:accountId/primary` - Set primary bank account
+- Auth (backend/routes/authRoutes.js)
+  - POST /auth/register
+  - POST /auth/login
+  - GET /auth/profile (protected)
 
-### Transactions
-- `POST /api/user/transfer` - Transfer money
-- `POST /api/user/addmoney` - Add money to wallet
-- `GET /api/user/transactions` - Get transaction history
-- `GET /api/user/transactions/:transactionId` - Get specific transaction
+- Bank accounts (backend/routes/bankRoutes.js)
+  - POST /bank/add
+  - GET /bank/list
+  - PUT /bank/:id
+  - DELETE /bank/:id
 
-### Health Check
-- `GET /api/health` - API health status
+- Employee data & payroll (backend/routes/employeeDataRoutes.js)
+  - GET /employees
+  - POST /employees
+  - GET /employees/:id
+  - PUT /employees/:id
+  - DELETE /employees/:id
+  - POST /employees/:id/payrun (example endpoint — check file for exact)
 
-## Usage
+- Transactions (backend/routes/transactionRoutes.js)
+  - GET /transactions
+  - POST /transactions
+  - GET /transactions/:id
 
-### 1. Registration
-- Visit `http://localhost:5173`
-- Fill in the registration form with username, email, password, and full name
-- Click "Create Account"
+Note: Confirm exact method paths and request/response shapes by opening each route and controller file.
 
-### 2. Login
-- Visit `http://localhost:5173/login`
-- Enter your email and password
-- Click "Sign In"
+## Development notes
+- Use the middleware at backend/middleware/auth.js to protect routes requiring authentication.
+- Controllers in backend/controller/* contain business logic and database interaction.
+- Models in backend/models/* map to database tables; keep them synced with database.sql.
+- Frontend context AuthContext.jsx handles auth state; hooks/useApi.jsx centralizes API calls.
 
-### 3. Dashboard
-After login, you'll be redirected to the dashboard where you can:
-- View your wallet balance
-- See recent transactions
-- Navigate to different sections
+## Testing
+- Add tests using your preferred framework (Jest / Mocha) in each folder.
+- No test harness included by default.
 
-### 4. Add Bank Account
-- Go to "Bank Accounts" section
-- Click "Add Bank Account"
-- Fill in account details (account number, bank name, IFSC, holder name)
-- Click "Add Bank"
+## Deployment
+- Build frontend: cd frontend && npm run build
+- Serve frontend build from a static host (Netlify / Vercel) or serve via backend (configure static middleware).
+- Ensure production DB credentials and secrets are set on the server.
 
-### 5. Transfer Money
-- Go to "Transfer Money" section
-- Click "Send Money"
-- Enter receiver's username, amount, and optional description
-- Click "Transfer"
+## Troubleshooting
+- DB connection errors: verify credentials in backend/.env and confirm MySQL server is running.
+- Port conflicts: change PORT in backend/.env or Vite port in frontend/vite.config.js.
 
-### 6. Add Money to Wallet
-- Go to "Add Money" section
-- Click "Add Money"
-- Enter amount and select bank account
-- Click "Add Money"
-
-### 7. View Transactions
-- Go to "Transactions" section
-- View complete transaction history with details
-
-## Security Features
-
-- **Password Hashing**: All passwords are hashed using bcrypt
-- **JWT Authentication**: Secure token-based authentication
-- **Input Validation**: Server-side validation for all inputs
-- **SQL Injection Protection**: Parameterized queries
-- **CORS Configuration**: Proper cross-origin setup
-- **Transaction Logging**: Complete audit trail
-
-## Error Handling
-
-The system includes comprehensive error handling:
-- Client-side form validation
-- Server-side input validation
-- Database error handling
-- Network error handling
-- User-friendly error messages
-
-## Development
-
-### Backend Development
-```bash
-cd backend
-npm run dev  # Starts with nodemon for auto-restart
-```
-
-### Frontend Development
-```bash
-cd frontend
-npm run dev  # Starts Vite development server
-```
-
-### Database Management
-- Use the provided SQL script to set up the database schema
-- Modify `backend/config/db.js` for different database configurations
-- Check `backend/config/database.sql` for table structures
-
-## Production Deployment
-
-### Backend
-1. Set `NODE_ENV=production`
-2. Use a strong JWT secret
-3. Configure proper database credentials
-4. Use PM2 or similar for process management
-
-### Frontend
-1. Build the production bundle: `npm run build`
-2. Serve static files with nginx or similar
-3. Configure environment variables for API endpoints
-
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Test thoroughly
-5. Submit a pull request
+## Contribution
+- Create feature branches, open PRs, include tests where applicable.
+- Follow consistent linting and commit message style.
 
 ## License
+MIT
 
-This project is licensed under the ISC License.
-
-## Support
-
-For support or questions, please create an issue in the repository.
-
----
-
-**Note**: This is a development/demo system. For production use, implement additional security measures, proper logging, monitoring, and compliance with financial regulations.
+## Contact / References
+- Inspect frontend and backend folders for implementation details and route documentation.
+- For questions about running the project on Windows: use the integrated terminal in VS Code (PowerShell or CMD).
