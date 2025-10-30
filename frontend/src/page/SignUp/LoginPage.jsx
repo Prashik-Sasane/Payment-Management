@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from "../../context/AuthContext";
 
 export default function Login() {
   const navigate = useNavigate();
@@ -18,16 +18,14 @@ export default function Login() {
     setError("");
 
     try {
-      const res = await fetch("http://localhost:5000/api/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: form.email, password: form.password , role: form.role })
+      const res = await login( {
+        email: form.email,
+        password: form.password,
+        role: form.role
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data?.error || "Login failed");
-
-       login(data.user, data.token);
-
+      const data = res;
+      if (!data || !data.user) throw new Error("Login failed");
+      
       if (data.user?.role === "hr") navigate("/dashboard");
       else navigate("/employee-dashboard");
     } catch (err) {
@@ -113,7 +111,6 @@ export default function Login() {
         </form>
 
         <div className="mt-4 text-center text-sm text-gray-600">Or login with</div>
-
         <div className="mt-3 flex flex-col gap-3">
           <button
             onClick={() => handleOAuthLogin("google")}
@@ -121,11 +118,15 @@ export default function Login() {
           >
             Login with Google
           </button>
+        </div>
+        <div className="mt-2 text-center text-sm">
+          <span className="text-gray-600">Don't have an account? </span>
           <button
-            onClick={() => handleOAuthLogin("github")}
-            className="flex-1 bg-gray-800 text-white py-2 rounded-lg hover:bg-black transition duration-200"
+            type="button"
+            onClick={() => navigate("/register")}
+            className="text-indigo-600 hover:underline font-medium ml-1"
           >
-            Login with GitHub
+            Register
           </button>
         </div>
       </div>

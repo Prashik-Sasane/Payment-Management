@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from "../../context/AuthContext";
 
 const RegisterPage = () => {
   const { register } = useAuth();
@@ -89,7 +89,6 @@ const RegisterPage = () => {
               required
             >
               <option value="employee">Employee</option>
-              <option value="admin">Admin</option>
               <option value="hr">HR</option>
             </select>
           </div>
@@ -101,6 +100,18 @@ const RegisterPage = () => {
             {loading ? "Registering..." : "Register"}
           </button>
         </form>
+
+        <div className="mt-4 text-center text-sm">
+          <span className="text-gray-600">Already have an account? </span>
+          <button
+            type="button"
+            onClick={() => navigate("/")}
+            disabled={loading}
+            className="text-indigo-600 hover:underline font-medium ml-1"
+          >
+            Log in
+          </button>
+        </div>
       </div>
     </div>
   );

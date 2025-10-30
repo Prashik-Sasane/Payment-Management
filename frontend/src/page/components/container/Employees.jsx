@@ -2,101 +2,14 @@ import React, { useState, useEffect } from "react";
 import {
   FaSearch,
   FaPlus,
-  FaEdit,
   FaTrash,
   FaEye,
-  FaQuestionCircle,
-  FaCog,
-  FaUserCircle,
-  FaThLarge,
-  FaUsers,
   FaTasks,
 } from "react-icons/fa";
 import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
-import { useAuth } from "../context/AuthContext"; // adjust path if needed
-
-// ✅ Sidebar Component
-function Sidebar() {
-  const { user, logout } = useAuth();
-
-  return (
-    <aside className="w-72 h-screen sticky top-0 bg-white border-r border-gray-200 flex flex-col px-6 py-8 overflow-auto">
-      {/* User Info */}
-      <div className="flex items-center mb-10">
-        <FaUserCircle size={42} className="text-sky-500 mr-3" />
-        <div>
-          <div className="font-bold">{user?.name || "Guest User"}</div>
-          <div className="text-xs text-gray-600">{user?.role || "No Role"}</div>
-        </div>
-      </div>
-
-      {/* Navigation */}
-      <nav className="flex flex-col gap-2 mb-10">
-        <Link
-          to="/dashboard"
-          className="flex items-center gap-3 px-3 py-2 rounded font-medium text-sky-500 bg-sky-50"
-        >
-          <FaThLarge className="text-lg" /> Dashboard
-        </Link>
-
-        <Link
-          to="/payruns"
-          className="flex items-center gap-3 px-3 py-2 rounded font-medium text-sky-700 hover:bg-sky-100 transition"
-        >
-          <FaUsers className="text-lg" /> Payroll
-        </Link>
-
-        <Link
-          to="/employees"
-          className="flex items-center gap-3 px-3 py-2 rounded font-medium text-sky-700 hover:bg-sky-100 transition"
-        >
-          <FaUsers className="text-lg" /> Employees
-        </Link>
-
-        <a
-          href="#"
-          className="flex items-center gap-3 px-3 py-2 rounded font-medium text-sky-700 hover:bg-sky-100 transition"
-        >
-          <FaTasks className="text-lg" /> Tasks
-          <span className="ml-2 bg-red-500 text-white rounded-full px-2 text-xs">2</span>
-        </a>
-      </nav>
-
-      {/* Bottom Links */}
-      <div className="flex flex-col gap-2">
-        <a
-          href="#"
-          className="flex items-center gap-3 px-3 py-2 rounded font-medium text-gray-600 hover:bg-gray-100 transition"
-        >
-          <FaQuestionCircle className="text-lg" /> Help Center
-        </a>
-        <a
-          href="#"
-          className="flex items-center gap-3 px-3 py-2 rounded font-medium text-gray-600 hover:bg-gray-100 transition"
-        >
-          <FaCog className="text-lg" /> Settings
-        </a>
-      </div>
-
-      {/* Logout Button */}
-      <button
-        onClick={logout}
-        className="mt-6 flex items-center justify-center px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition"
-      >
-        Logout
-      </button>
-
-      {/* Footer */}
-      <div className="mt-auto pt-10 flex items-center gap-2 text-xs text-gray-400">
-        <div className="rounded-md bg-sky-100 p-1 text-sky-500 font-bold">H</div>
-        <span>Happytech</span>
-      </div>
-    </aside>
-  );
-}
-
-// ✅ Employees Component
+import { useAuth } from "../../../context/AuthContext";
+import Sidebar from "../hr-sidebar/Sidebar.jsx";
 function Employees() {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -117,9 +30,9 @@ function Employees() {
   const departments = ["Engineering", "HR", "Finance", "Marketing", "Sales"];
 
   // 🔒 Protect route - only logged in users
-  useEffect(() => {
-    if (!user) navigate("/");
-  }, [user, navigate]);
+  // useEffect(() => {
+  //   if (!user) navigate("/");
+  // }, [user, navigate]);
 
   // ✅ Fetch employees from backend
   useEffect(() => {

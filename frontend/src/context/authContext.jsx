@@ -8,7 +8,6 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [token, setToken] = useState(null);
 
-  // Load from localStorage when app starts
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
     const storedToken = localStorage.getItem("token");
@@ -19,7 +18,6 @@ export const AuthProvider = ({ children }) => {
     }
   }, []);
 
-  // 🔹 Login (for existing users)
   const login = async (formData) => {
     try {
       const res = await axios.post(
@@ -41,7 +39,7 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // 🔹 Register (for new users)
+
   const register = async (formData) => {
     try {
       const res = await axios.post(

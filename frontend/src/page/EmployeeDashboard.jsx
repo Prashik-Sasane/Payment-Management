@@ -10,7 +10,7 @@ axios.defaults.baseURL = "http://localhost:5000";
 function EmployeeDashboard() {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
-
+  const [loading, setLoading] = useState(false);
   const [activeSection, setActiveSection] = useState("overview");
   const [employeeData, setEmployeeData] = useState({
     name: "",
@@ -96,7 +96,9 @@ function EmployeeDashboard() {
   const handleLeaveSubmit = async (e) => {
     e.preventDefault();
 
-    if(!isNaN(start) || !isNaN(end)){
+    const { startDate, endDate } = leaveForm;
+    
+    if(!isNaN(startDate) || !isNaN(endDate)){
       alert('Invalid Date plz provide the correct date');
       return;
     }
@@ -120,11 +122,37 @@ function EmployeeDashboard() {
     }
   };
 
+  const handleSubmit = async(e) => {
+    e.preventDefault();
+    try{
+      setLoading(true);
+      const token = localStorage.getItem("token");
+      await axios.put(
+        "http://localhost:5000/api/employee/update-profile",
+         employeeData,
+         {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      )
+      alert("Profile updated successfully!");
+    }
+    catch (err) {
+      console.error("Error updating profile:", err);
+      alert("Failed to update profile");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const sidebarItems = [
     { id: "overview", label: "Overview", icon: <FaUser /> },
     { id: "bank", label: "Bank Details", icon: <FaCreditCard /> },
     { id: "history", label: "Pay History", icon: <FaHistory /> },
     { id: "leave", label: "Leave Form", icon: <FaFileAlt /> },
+    { id: "edit-profile", label: "Edit Profile", icon: <FaCog /> }
   ];
   return (
     <div className="flex min-h-screen font-sans bg-white">
@@ -254,7 +282,7 @@ function EmployeeDashboard() {
           
           <div className="flex-1 p-8 overflow-y-auto">
           {activeSection === "bank" && (
-            <div className="max-w-3xl mx-auto space-y-8 border-gray-400 rounded-lg shadow-md">
+            <div className="max-w-3xl mx-auto space-y-8 border border-gray-300 rounded-lg shadow-md">
               <div className="bg-white rounded-2xl p-8">
                 <h3 className="text-xl font-bold text-[#222B45] mb-6 flex items-center gap-2">
                   <FaCreditCard className="text-[#554CFF]" /> Add Bank Account
@@ -298,7 +326,7 @@ function EmployeeDashboard() {
           )}
 
           {activeSection === "leave" && (
-            <div className="max-w-3xl mx-auto space-y-8 rounded-lg shadow-md bg-white">
+            <div className="max-w-2xl mx-auto space-y-8 rounded-lg shadow-md bg-white border border-gray-300">
               <div className="rounded-2xl p-8">
                 <h3 className="text-xl font-bold text-[#222B45] mb-4">Leave Balance</h3>
                 <p className="text-[#505887] text-lg">
@@ -376,8 +404,109 @@ function EmployeeDashboard() {
             </div>
           )}
 
+          {activeSection === "edit-profile" && (
+            <div className="max-w-3xl bg-white mx-auto p-8 rounded-lg shadow-md border border-gray-300">
+              <h3 className="text-xl font-bold text-[#222B45] mb-6 flex items-center gap-2">
+                <FaCog className="text-[#554CFF]" /> Edit Profile
+              </h3>
+              <form onSubmit={handleSubmit} className="space-y-6">
+                <div className="mb-4">
+                  <label className="block text-sm font-semibold text-[#505887] mb-2">Name</label>
+                  <input
+                    type="text"
+                    value={employeeData.name}
+                    onChange={(e) => setEmployeeData({ ...employeeData, name: e.target.value })}
+                    className="w-full px-4 py-3 border border-[#E6E7EC] rounded-xl focus:ring-2 focus:ring-[#554CFF] text-[#222B45] font-medium shadow-sm"
+                    required
+                  />
+                </div>
+
+                <div className="mb-4">
+                  <label className="block text-sm font-semibold text-[#505887] mb-2">Email</label>
+                  <input
+                    type="email"
+                    value={employeeData.email}
+                    placeholder="Enter your Email"
+                    onChange={(e) => setEmployeeData({ ...employeeData, email: e.target.value })}
+                    className="w-full px-4 py-3 border border-[#E6E7EC] rounded-xl focus:ring-2 focus:ring-[#554CFF] text-[#222B45] font-medium shadow-sm"
+                    required
+                  />
+                </div>
+
+                <div className="mb-4">
+                  <label className="block text-sm font-semibold text-[#505887] mb-2">Phone</label>
+                  <input
+                    type="tel"
+                    value={employeeData.phone}
+                    placeholder="Enter your Phone"
+                    onChange={(e) => setEmployeeData({ ...employeeData, phone: e.target.value })}
+                    className="w-full px-4 py-3 border border-[#E6E7EC] rounded-xl focus:ring-2 focus:ring-[#554CFF] text-[#222B45] font-medium shadow-sm"
+                    required
+                  />
+                </div>
+
+                <div>
+                    <label className="block text-gray-600 font-medium mb-2">Department</label>
+                    <select
+                      value={employeeData.department || ""}
+                      onChange={(e) =>
+                        setEmployeeData({ ...employeeData, department: e.target.value })
+                      }
+                      className="w-full px-4 py-3 border border-[#E6E7EC] rounded-xl focus:ring-2 focus:ring-[#554CFF] text-[#222B45] font-medium shadow-sm"
+                    >
+                      <option value="">Select Department</option>
+                      <option value="HR">HR</option>
+                      <option value="Engineering">Engineering</option>
+                      <option value="Sales">Sales</option>
+                      <option value="Marketing">Marketing</option>
+                    </select>
+                  </div>
+
+                  {/* Position */}
+                  <div>
+                    <label className="block text-gray-600 font-medium mb-2">Position</label>
+                    <select
+                      value={employeeData.position || ""}
+                      onChange={(e) =>
+                        setEmployeeData({ ...employeeData, position: e.target.value })
+                      }
+                      className="w-full px-4 py-3 border border-[#E6E7EC] rounded-xl focus:ring-2 focus:ring-[#554CFF] text-[#222B45] font-medium shadow-sm"
+                    >
+                      <option value="">Select Position</option>
+                      <option value="Software Engineer">Software Engineer</option>
+                      <option value="Product Manager">Product Manager</option>
+                      <option value="Sales Executive">Sales Executive</option>
+                      <option value="Marketing Specialist">Marketing Specialist</option>
+                    </select>
+                  </div>
+
+                  {/* Current Salary */}
+                  <div>
+                    <label className="block text-gray-600 font-medium mb-2">Current Salary</label>
+                    <input
+                      type="number"
+                      value={employeeData.salary || ""}
+                      placeholder="Enter your Current Salary"
+                      onChange={(e) =>
+                        setEmployeeData({ ...employeeData, salary: e.target.value })
+                      }
+                      className="w-full px-4 py-3 border border-[#E6E7EC] rounded-xl focus:ring-2 focus:ring-[#554CFF] text-[#222B45] font-medium shadow-sm"
+                    />
+                  </div>
+
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="mt-4 bg-[#16C784] hover:bg-[#108B5E] transition px-7 py-3 rounded-xl text-white font-bold text-lg shadow"
+                >
+                  {loading ? "Saving..." : "Save Changes"}
+                </button>
+              </form>
+            </div>
+          )}
+
           {activeSection === "history" && (
-            <div className="max-w-4xl mx-auto bg-white rounded-lg shadow-sm">
+            <div className="max-w-4xl mx-auto bg-white rounded-lg shadow-sm border border-gray-300 ">
               <div className="rounded-2xl p-8">
                 <h3 className="text-xl font-bold text-[#222B45] mb-6 flex items-center gap-2 tracking-wide">
                   <FaHistory className="text-[#554CFF]" /> Payment History

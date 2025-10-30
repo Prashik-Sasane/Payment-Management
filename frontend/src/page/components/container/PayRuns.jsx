@@ -1,69 +1,8 @@
 import React, { useState } from "react";
-import { FaPlay, FaPause, FaCheck, FaTimes, FaDownload } from "react-icons/fa";
-import { FaSearch, FaPlus, FaEdit, FaTrash, FaEye, FaFilter , FaUserCircle , FaThLarge , FaUsers , FaTasks , FaQuestionCircle , FaCog } from "react-icons/fa";
+import { FaPlay, FaCheck, FaDownload } from "react-icons/fa";
+import { FaEye} from "react-icons/fa";
 import { Link } from "react-router-dom";
-
-function Sidebar() {
-  return (
-    <aside className="w-72 h-screen sticky top-0 bg-white border-r border-gray-200 flex flex-col px-6 py-8 overflow-auto">
-      <div className="flex items-center mb-10">
-        <FaUserCircle size={42} className="text-sky-500 mr-3" />
-        <div>
-          <div className="font-bold">Rajesh Sharma</div>
-          <div className="text-xs text-gray-600">HR Manager</div>
-        </div>
-      </div>
-      <nav className="flex flex-col gap-2 mb-10">
-        <a
-          href="#"
-          className="flex items-center gap-3 px-3 py-2 rounded font-medium text-sky-500 bg-sky-50"
-        >
-          <FaThLarge className="text-lg" /> Dashboard
-        </a>
-
-        <Link
-          to="/payruns"
-          className="flex items-center gap-3 px-3 py-2 rounded font-medium text-sky-700 hover:bg-sky-100 transition"
-        >
-          <FaUsers className="text-lg" /> Payroll
-        </Link>
-        <Link
-          to="/employees"
-          className="flex items-center gap-3 px-3 py-2 rounded font-medium text-sky-700 hover:bg-sky-100 transition"
-        >
-          <FaUsers className="text-lg" /> Employees
-        </Link>
-        <a
-          href="#"
-          className="flex items-center gap-3 px-3 py-2 rounded font-medium text-sky-700 hover:bg-sky-100 transition"
-        >
-          <FaTasks className="text-lg" /> Tasks
-          <span className="ml-2 bg-red-500 text-white rounded-full px-2 text-xs">
-            2
-          </span>
-        </a>
-      </nav>
-      <div className="flex flex-col gap-2">
-        <a
-          href="#"
-          className="flex items-center gap-3 px-3 py-2 rounded font-medium text-gray-600 hover:bg-gray-100 transition"
-        >
-          <FaQuestionCircle className="text-lg" /> Help Center
-        </a>
-        <a
-          href="#"
-          className="flex items-center gap-3 px-3 py-2 rounded font-medium text-gray-600 hover:bg-gray-100 transition"
-        >
-          <FaCog className="text-lg" /> Settings
-        </a>
-      </div>
-      <div className="mt-auto pt-10 flex items-center gap-2 text-xs text-gray-400">
-        <div className="rounded-md bg-sky-100 p-1 text-sky-500 font-bold">H</div>
-        <span>Happytech</span>
-      </div>
-    </aside>
-  );
-}
+import Sidebar from "../hr-sidebar/Sidebar.jsx";
 
 function PayRuns() {
   const [payRuns, setPayRuns] = useState([
