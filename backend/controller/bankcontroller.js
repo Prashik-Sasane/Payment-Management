@@ -1,5 +1,39 @@
 const db = require("../config/db");
 
+const getProfile = async (req, res) => {
+  const employeeId = req.user.id;
+  try {
+    const [rows] = await db.query(
+      "SELECT id, name, email, employeeId, department, position, salary FROM users WHERE id = ?",
+      [employeeId]
+    );
+
+    if (rows.length === 0)
+      return res.status(404).json({ error: "Employee not found" });
+
+    res.json(rows[0]);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Server error while fetching profile" });
+  }
+};
+
+const updateEmployeeProfile = async (req, res) => {
+  const employeeId = req.user.id; 
+  const { name, department, position, salary } = req.body;
+
+  try {
+    await db.query(
+      "UPDATE users SET name = ?, department = ?, position = ?, salary = ? WHERE id = ?",
+      [name, department, position, salary, employeeId]
+    );
+
+    res.json({ message: "Employee profile updated successfully!" });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Server error while updating profile" });
+  }
+};
 
 const getBankAccounts = async (req, res) => {
   const employeeId = req.user.id;
@@ -63,4 +97,4 @@ const applyLeave = async (req, res) => {
   }
 };
 
-module.exports = { getBankAccounts, getLeaveBalance , addBankAccount, applyLeave };
+module.exports = { getBankAccounts, getLeaveBalance , addBankAccount, applyLeave , getProfile , updateEmployeeProfile};

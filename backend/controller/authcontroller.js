@@ -10,7 +10,7 @@ const registerUser = async (req, res) => {
       return res.status(400).json({ error: "All fields are required" });
     }
 
-    const [existingUser] = await db.query("SELECT * FROM users WHERE email = ?", [email]);
+    const [existingUser] = await db.query("SELECT * FROM users WHERE email = ? AND role = ?", [email , role]);
     if (existingUser.length > 0) {
       return res.status(400).json({ error: "User already exists" });
     }
@@ -22,10 +22,9 @@ const registerUser = async (req, res) => {
       [name, email, hashedPassword, role]
     );
 
-    // Fetch newly created user
-    const [newUser] = await db.query("SELECT * FROM users WHERE email = ?", [email]);
+    const [newUser] = await db.query("SELECT * FROM users WHERE email = ? AND role = ?", [email , role]);
 
-    // Generate JWT
+   
     const token = jwt.sign(
       { id: newUser[0].id, role: newUser[0].role },
       process.env.JWT_SECRET,
@@ -39,7 +38,7 @@ const registerUser = async (req, res) => {
         name: newUser[0].name,
         email: newUser[0].email,
         role: newUser[0].role,
-        employeeId: newUser[0].id, // optional: separate employeeId if needed
+        employeeId: newUser[0].id, 
       },
       token,
     });
@@ -53,7 +52,10 @@ const loginUser = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    const [user] = await db.query("SELECT * FROM users WHERE email = ?", [email]);
+    if(!email || !password) {
+      return res.status(400).json({error: "Email and Password are required"})
+    }
+    const [user] = await db.query("SELECT * FROM users WHERE email = ? AND role = ?", [email , role]);
     if (user.length === 0) {
       return res.status(400).json({ error: "Invalid email or password" });
     }

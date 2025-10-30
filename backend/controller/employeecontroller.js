@@ -1,6 +1,6 @@
 const db = require("../config/db");
 
-// ✅ Get all employees
+
 const getAllEmployees = async (req, res) => {
   try {
     const [employees] = await db.query("SELECT * FROM users");
@@ -11,12 +11,12 @@ const getAllEmployees = async (req, res) => {
   }
 };
 
-// ✅ Add new employee
+
 const addEmployee = async (req, res) => {
   try {
     const { name, email, department, position, salary, joinDate } = req.body;
     await db.query(
-      "INSERT INTO users (name, email, department, position, salary, joinDate) VALUES (?, ?, ?, ?, ?, ?)",
+      "INSERT INTO users (name, email, department, position, salary) VALUES (?, ?, ?, ?, ?, ?)",
       [name, email, department, position, salary, joinDate]
     );
     res.status(201).json({ message: "Employee added successfully" });
