@@ -1,20 +1,24 @@
+import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import LoginPage from "./page/SignUp/LoginPage";
-import Dashboard from "./page/components/Dashboard";
-import RegisterPage from "./page/SignUp/RegisterPage";
-import EmployeePage from "./page/EmployeeDashboard";
-import Employees from "./page/components/container/Employees";
-import PayRuns from "./page/components/container/PayRuns";
+import EmployeeLogin from "./page/Signin/EmployeeLogin";
+import HRLogin from "./page/Signin/HRLoginPage";
+import EmployeeDashboard from "./page/Employee/EmployeeDashboard";
+import HRDashboard from "./page/components/HRDashboard";
+import EmployeeRegister from "./page/SignUp/EmployeeRegisterPage";
+import HRRegister from "./page/SignUp/HrRegisterPage";
+import TransactionHistory from "./page/TransactionHistory";
 function App() {
   return (
     <Router>
       <Routes>
-        <Route path="/" element={<LoginPage />} />
-        <Route path="/register" element={<RegisterPage />} />
-        <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/employee-dashboard" element={<EmployeePage />} />
-        <Route path="/employees" element={<Employees />} />
-        <Route path="/payruns" element={<PayRuns />} />
+        <Route path="/" element={<TransactionHistory />} />
+        <Route path="/employee/login" element={<EmployeeLogin />} />
+        <Route path="/employee/register" element={<EmployeeRegister />} />
+        <Route path="/employee/dashboard" element={<EmployeeDashboard />} />
+
+        <Route path="/hr/login" element={<HRLogin />} />
+        <Route path="/hr/register" element={<HRRegister/>} />
+        <Route path="/hr/dashboard" element={<HRDashboard />} />
       </Routes>
     </Router>
   );

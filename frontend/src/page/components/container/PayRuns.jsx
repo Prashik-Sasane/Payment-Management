@@ -1,276 +1,293 @@
-import React, { useState } from "react";
-import { FaPlay, FaCheck, FaDownload } from "react-icons/fa";
-import { FaEye} from "react-icons/fa";
-import { Link } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { FaPlay, FaCheck, FaDownload, FaEye } from "react-icons/fa";
 import Sidebar from "../hr-sidebar/Sidebar.jsx";
 
-function PayRuns() {
-  const [payRuns, setPayRuns] = useState([
-    {
-      id: 1,
-      name: "May 2024 Pay Run",
-      period: "May 1 - May 31, 2024",
-      status: "Completed",
-      totalEmployees: 1308,
-      totalAmount: 172523654,
-      processedDate: "2024-05-31",
-      createdBy: "Meera Krishnan"
-    },
-    {
-      id: 2,
-      name: "April 2024 Pay Run",
-      period: "April 1 - April 30, 2024",
-      status: "Completed",
-      totalEmployees: 1305,
-      totalAmount: 170123654,
-      processedDate: "2024-04-30",
-      createdBy: "Meera Krishnan"
-    },
-    {
-      id: 3,
-      name: "June 2024 Pay Run",
-      period: "June 1 - June 30, 2024",
-      status: "In Progress",
-      totalEmployees: 1310,
-      totalAmount: 0,
-      processedDate: null,
-      createdBy: "Meera Krishnan"
-    },
-    {
-      id: 4,
-      name: "July 2024 Pay Run",
-      period: "July 1 - July 31, 2024",
-      status: "In Progress",
-      totalEmployees: 1310,
-      totalAmount: 0,
-      processedDate: null,
-      createdBy: "Meera Krishnan"
-    },
-    {
-      id: 5,
-      name: "June 2024 Pay Run",
-      period: "June 1 - June 30, 2024",
-      status: "In Progress",
-      totalEmployees: 1310,
-      totalAmount: 0,
-      processedDate: null,
-      createdBy: "Meera Krishnan"
-    },
-    {
-      id: 6,
-      name: "July 2024 Pay Run",
-      period: "July 1 - July 31, 2024",
-      status: "In Progress",
-      totalEmployees: 1310,
-      totalAmount: 0,
-      processedDate: null,
-      createdBy: "Meera Krishnan"
-    },
-    {
-      id: 7,
-      name: "August 2024 Pay Run",
-      period: "August 1 - August 31, 2024",
-      status: "In Progress",
-      totalEmployees: 1310,
-      totalAmount: 0,
-      processedDate: null,
-      createdBy: "Meera Krishnan"
-    }
-  ]);
-
-  const [showCreateModal, setShowCreateModal] = useState(false);
+const PayRuns = () => {
+  const [payRuns, setPayRuns] = useState([]);
+  const [showModal, setShowModal] = useState(false);
   const [newPayRun, setNewPayRun] = useState({
     name: "",
     startDate: "",
-    endDate: ""
+    endDate: "",
   });
 
-  const handleCreatePayRun = (e) => {
+  // =========================
+  // FETCH PAYROLL DATA
+  // =========================
+  useEffect(() => {
+    fetch("/api/payroll", {
+      headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+    })
+      .then((res) => res.json())
+      .then((data) => setPayRuns(data))
+      .catch((err) => console.error("Error fetching payroll:", err));
+  }, []);
+
+  // =========================
+  // CREATE PAY RUN
+  // =========================
+  const handleCreatePayRun = async (e) => {
     e.preventDefault();
     const payRun = {
-      id: payRuns.length + 1,
-      ...newPayRun,
-      period: `${newPayRun.startDate} - ${newPayRun.endDate}`,
-      status: "Draft",
-      totalEmployees: 0,
-      totalAmount: 0,
-      processedDate: null,
-      createdBy: "Meera Krishnan"
+      name: newPayRun.name,
+      startDate: newPayRun.startDate,
+      endDate: newPayRun.endDate,
     };
-    setPayRuns([payRun, ...payRuns]);
-    setNewPayRun({ name: "", startDate: "", endDate: "" });
-    setShowCreateModal(false);
-  };
 
-  const handleProcessPayRun = (id) => {
-    setPayRuns(payRuns.map(pr => 
-      pr.id === id 
-        ? { ...pr, status: "In Progress" }
-        : pr
-    ));
-  };
+    try {
+      const res = await fetch("http://localhost:5000/api/payroll/create", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+        body: JSON.stringify(payRun),
+      });
 
-  const handleCompletePayRun = (id) => {
-    setPayRuns(payRuns.map(pr => 
-      pr.id === id 
-        ? { 
-            ...pr, 
-            status: "Completed", 
-            processedDate: new Date().toISOString().split('T')[0],
-            totalAmount: 172523654,
-            totalEmployees: 1308
-          }
-        : pr
-    ));
-  };
+      if (!res.ok) throw new Error("Failed to create pay run");
 
-  const getStatusColor = (status) => {
-    switch (status) {
-      case 'Completed': return 'bg-green-100 text-green-800';
-      case 'In Progress': return 'bg-yellow-100 text-yellow-800';
-      case 'Draft': return 'bg-gray-100 text-gray-800';
-      default: return 'bg-gray-100 text-gray-800';
+      const newRun = await res.json();
+      setPayRuns([newRun, ...payRuns]);
+      setNewPayRun({ name: "", startDate: "", endDate: "" });
+      setShowModal(false);
+    } catch (err) {
+      console.error(err);
+      alert("Error creating pay run!");
     }
+  };
+
+  // =========================
+  // PROCESS PAY RUN
+  // =========================
+  const handleProcessPayRun = async (id) => {
+    const bonusPercent = window.prompt("Enter bonus % (optional):", 0);
+
+    try {
+      const res = await fetch(`http://localhost:5000/api/payroll/process/${id}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+        body: JSON.stringify({ bonusPercent: Number(bonusPercent) }),
+      });
+
+      if (!res.ok) throw new Error("Processing failed");
+
+      alert("✅ Payroll processed successfully!");
+      // Refresh payroll list
+      const updated = await fetch("/api/payroll", {
+        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+      }).then((r) => r.json());
+      setPayRuns(updated);
+    } catch (err) {
+      console.error(err);
+      alert("❌ Error processing payroll!");
+    }
+  };
+
+  // =========================
+  // COMPLETE PAY RUN
+  // =========================
+  const handleCompletePayRun = async (id) => {
+    try {
+      const res = await fetch(`http://localhost:5000/api/payroll/complete/${id}`, {
+        method: "PUT",
+        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+      });
+
+      if (!res.ok) throw new Error("Failed to complete pay run");
+
+      alert("✅ Pay run marked as completed!");
+      const updated = await fetch("http://localhost:5000/api/payroll", {
+        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+      }).then((r) => r.json());
+      setPayRuns(updated);
+    } catch (err) {
+      console.error(err);
+      alert("❌ Error completing pay run!");
+    }
+  };
+
+  // =========================
+  //  STATUS COLOR
+  // =========================
+  const getStatusColor = (status) => {
+    const colors = {
+      Completed: "bg-green-100 text-green-800",
+      "In Progress": "bg-yellow-100 text-yellow-800",
+      Draft: "bg-gray-100 text-gray-800",
+    };
+    return colors[status] || "bg-gray-100 text-gray-800";
   };
 
   return (
     <div className="flex">
       <Sidebar />
-    <div className="p-6 bg-gray-50 min-h-screen flex-1">
-      <div className="w-6xl mx-auto">
+
+      <div className="flex-1 min-h-screen bg-gray-50 p-8">
         {/* Header */}
-        <div className="mb-6">
-          <div className="flex justify-between items-center">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">Pay Runs</h1>
-              <p className="text-gray-600 mt-2">Manage and process employee payments</p>
-            </div>
-            <button
-              onClick={() => setShowCreateModal(true)}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-            >
-              Create New Pay Run
-            </button>
+        <div className="flex justify-between items-center mb-8">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">Pay Runs</h1>
+            <p className="text-gray-600">Manage and process employee payments</p>
           </div>
+          <button
+            onClick={() => setShowModal(true)}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+          >
+            Create New Pay Run
+          </button>
         </div>
 
-        {/* Pay Runs List */}
+        {/* Pay Run List */}
         <div className="space-y-4">
-          {payRuns.map((payRun) => (
-            <div key={payRun.id} className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-              <div className="flex justify-between items-start">
-                <div className="flex-1">
-                  <div className="flex items-center gap-3 mb-2">
-                    <h3 className="text-lg font-semibold text-gray-900">{payRun.name}</h3>
-                    <span className={`px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(payRun.status)}`}>
-                      {payRun.status}
-                    </span>
-                  </div>
-                  <p className="text-sm text-gray-600 mb-3">{payRun.period}</p>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                    <div>
-                      <p className="text-sm text-gray-500">Total Employees</p>
-                      <p className="text-lg font-semibold text-gray-900">{payRun.totalEmployees}</p>
+          {payRuns.length === 0 ? (
+            <p className="text-gray-600">No pay runs found.</p>
+          ) : (
+            payRuns.map((run) => (
+              <div
+                key={run.id}
+                className="bg-white border border-gray-200 rounded-lg shadow-sm p-6"
+              >
+                <div className="flex justify-between flex-wrap gap-4">
+                  {/* Pay Run Info */}
+                  <div className="flex-1">
+                    <div className="flex items-center gap-3 mb-2">
+                      <h3 className="text-lg font-semibold text-gray-900">
+                        {run.name}
+                      </h3>
+                      <span
+                        className={`px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(
+                          run.status
+                        )}`}
+                      >
+                        {run.status}
+                      </span>
                     </div>
-                    <div>
-                      <p className="text-sm text-gray-500">Total Amount</p>
-                      <p className="text-lg font-semibold text-gray-900">
-                        {payRun.totalAmount > 0 ? `₹${payRun.totalAmount.toLocaleString()}` : 'Not calculated'}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-500">Processed Date</p>
-                      <p className="text-lg font-semibold text-gray-900">
-                        {payRun.processedDate || 'Not processed'}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-500">Created By</p>
-                      <p className="text-lg font-semibold text-gray-900">{payRun.createdBy}</p>
-                    </div>
-                  </div>
-                </div>
+                    <p className="text-sm text-gray-600 mb-4">{run.period}</p>
 
-                <div className="flex items-center gap-2 ml-4">
-                  {payRun.status === 'Draft' && (
-                    <button
-                      onClick={() => handleProcessPayRun(payRun.id)}
-                      className="flex items-center gap-2 px-3 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
-                    >
-                      <FaPlay />
-                      Process
-                    </button>
-                  )}
-                  {payRun.status === 'In Progress' && (
-                    <button
-                      onClick={() => handleCompletePayRun(payRun.id)}
-                      className="flex items-center gap-2 px-3 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
-                    >
-                      <FaCheck />
-                      Complete
-                    </button>
-                  )}
-                  {payRun.status === 'Completed' && (
-                    <div className="flex items-center gap-2">
-                      <button className="flex items-center gap-2 px-3 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 transition-colors">
-                        <FaDownload />
-                        Download
-                      </button>
-                      <button className="flex items-center gap-2 px-3 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors">
-                        <FaEye />
-                        View Details
-                      </button>
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                      <div>
+                        <p className="text-sm text-gray-500">Total Employees</p>
+                        <p className="text-lg font-semibold text-gray-900">
+                          {run.totalEmployees || 0}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-gray-500">Total Amount</p>
+                        <p className="text-lg font-semibold text-gray-900">
+                          {run.totalAmount
+                            ? `₹${run.totalAmount.toLocaleString()}`
+                            : "Not calculated"}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-gray-500">Processed Date</p>
+                        <p className="text-lg font-semibold text-gray-900">
+                          {run.processedDate || "Not processed"}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-gray-500">Created By</p>
+                        <p className="text-lg font-semibold text-gray-900">
+                          {run.createdBy}
+                        </p>
+                      </div>
                     </div>
-                  )}
+                  </div>
+
+                  {/* Action Buttons */}
+                  <div className="flex items-center gap-2">
+                    {run.status === "Draft" && (
+                      <button
+                        onClick={() => handleProcessPayRun(run.id)}
+                        className="flex items-center gap-2 px-3 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                      >
+                        <FaPlay /> Process
+                      </button>
+                    )}
+                    {run.status === "In Progress" && (
+                      <button
+                        onClick={() => handleCompletePayRun(run.id)}
+                        className="flex items-center gap-2 px-3 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
+                      >
+                        <FaCheck /> Complete
+                      </button>
+                    )}
+                    {run.status === "Completed" && (
+                      <>
+                        <button className="flex items-center gap-2 px-3 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700">
+                          <FaDownload /> Download
+                        </button>
+                        <button className="flex items-center gap-2 px-3 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
+                          <FaEye /> View
+                        </button>
+                      </>
+                    )}
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
+            ))
+          )}
         </div>
 
         {/* Create Pay Run Modal */}
-        {showCreateModal && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-lg p-6 w-full max-w-md">
+        {showModal && (
+          <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+            <div className="bg-white rounded-lg p-6 w-full max-w-md shadow-lg">
               <h2 className="text-xl font-bold mb-4">Create New Pay Run</h2>
               <form onSubmit={handleCreatePayRun} className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Pay Run Name</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Pay Run Name
+                  </label>
                   <input
                     type="text"
                     value={newPayRun.name}
-                    onChange={(e) => setNewPayRun({...newPayRun, name: e.target.value})}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="e.g., June 2024 Pay Run"
+                    onChange={(e) =>
+                      setNewPayRun({ ...newPayRun, name: e.target.value })
+                    }
+                    placeholder="e.g., August 2024 Pay Run"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
                     required
                   />
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Start Date</label>
-                  <input
-                    type="date"
-                    value={newPayRun.startDate}
-                    onChange={(e) => setNewPayRun({...newPayRun, startDate: e.target.value})}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    required
-                  />
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Start Date
+                    </label>
+                    <input
+                      type="date"
+                      value={newPayRun.startDate}
+                      onChange={(e) =>
+                        setNewPayRun({ ...newPayRun, startDate: e.target.value })
+                      }
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      End Date
+                    </label>
+                    <input
+                      type="date"
+                      value={newPayRun.endDate}
+                      onChange={(e) =>
+                        setNewPayRun({ ...newPayRun, endDate: e.target.value })
+                      }
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
+                      required
+                    />
+                  </div>
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">End Date</label>
-                  <input
-                    type="date"
-                    value={newPayRun.endDate}
-                    onChange={(e) => setNewPayRun({...newPayRun, endDate: e.target.value})}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    required
-                  />
-                </div>
-                <div className="flex justify-end space-x-3">
+                <div className="flex justify-end gap-3">
                   <button
                     type="button"
-                    onClick={() => setShowCreateModal(false)}
-                    className="px-4 py-2 text-gray-600 border border-gray-300 rounded-md hover:bg-gray-50"
+                    onClick={() => setShowModal(false)}
+                    className="px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50"
                   >
                     Cancel
                   </button>
@@ -278,7 +295,7 @@ function PayRuns() {
                     type="submit"
                     className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
                   >
-                    Create Pay Run
+                    Create
                   </button>
                 </div>
               </form>
@@ -287,8 +304,7 @@ function PayRuns() {
         )}
       </div>
     </div>
-    </div>
   );
-}
+};
 
 export default PayRuns;
