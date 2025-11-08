@@ -1,25 +1,26 @@
 const express = require("express");
 const router = express.Router();
-const verifyToken = require("../middleware/auth");
+const { authMiddleware } = require("../middleware/authMiddleware.js"); 
 const {
+  getProfile,
   getBankAccounts,
   getLeaveBalance,
   addBankAccount,
   applyLeave,
-  updateEmployeeProfile
+  updateEmployeeProfile,
+  getEmployeeDetails
 } = require("../controller/bankcontroller");
 
-// GET ROUTES
-router.get("/profile" , verifyToken, getBankAccounts);
-router.get("/bank", verifyToken, getBankAccounts);
-router.get("/leave-balance" , verifyToken , getLeaveBalance);
+const employeeAuth = authMiddleware("employee_token");
 
-// PUSH ROUTES
-router.post("/bank", verifyToken, addBankAccount);
-router.post("/leave", verifyToken, applyLeave);
+router.get("/profile", employeeAuth,   getProfile);
+router.get("/bank", employeeAuth, getBankAccounts);
+router.get("/leave-balance", employeeAuth, getLeaveBalance);
+router.get("/details" , employeeAuth , getEmployeeDetails)
 
-// PUT ROUTES -when we update things
-router.put("/update-profile", verifyToken, updateEmployeeProfile);
+router.post("/bank", employeeAuth, addBankAccount);
+router.post("/leave", employeeAuth, applyLeave);
 
+router.put("/update-profile", employeeAuth, updateEmployeeProfile);
 
 module.exports = router;

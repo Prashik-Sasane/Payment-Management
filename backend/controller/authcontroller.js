@@ -1,90 +1,92 @@
 const bcrypt = require("bcryptjs");
-const jwt = require("jsonwebtoken");
 const db = require("../config/db");
+const { generateToken } = require("../services/auth");
 
-const registerUser = async (req, res) => {
+const createEmployee = async (req, res) => {
+  const { name, email, password, department, position, salary } = req.body;
   try {
-    const { name, email, password, role } = req.body;
-
-    if (!name || !email || !password || !role) {
-      return res.status(400).json({ error: "All fields are required" });
-    }
-
-    const [existingUser] = await db.query("SELECT * FROM users WHERE email = ? AND role = ?", [email , role]);
-    if (existingUser.length > 0) {
-      return res.status(400).json({ error: "User already exists" });
-    }
-
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    await db.query(
-      "INSERT INTO users (name, email, password, role) VALUES (?, ?, ?, ?)",
-      [name, email, hashedPassword, role]
+    // Insert user into DB
+    const [result] = await db.query(
+      "INSERT INTO users (name, email, password, role, department, position, salary) VALUES (?, ?, ?, 'employee', ?, ?, ?)",
+      [name, email, hashedPassword, department, position, salary]
     );
 
-    const [newUser] = await db.query("SELECT * FROM users WHERE email = ? AND role = ?", [email , role]);
+    // Auto-generate token
+    const token = generateToken({ id: result.insertId, role: "employee" });
 
-   
-    const token = jwt.sign(
-      { id: newUser[0].id, role: newUser[0].role },
-      process.env.JWT_SECRET,
-      { expiresIn: "1h" }
-    );
+    // Set cookie
+    res.cookie("employee_token", token, { httpOnly: true, secure: false });
 
-    res.json({
-      message: "User registered successfully",
-      user: {
-        id: newUser[0].id,
-        name: newUser[0].name,
-        email: newUser[0].email,
-        role: newUser[0].role,
-        employeeId: newUser[0].id, 
-      },
-      token,
-    });
+    // Return response with token
+    res.status(201).json({ message: "Employee registered successfully", token });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: "Server error" });
+    res.status(500).json({ error: "Employee registration failed" });
   }
 };
 
-const loginUser = async (req, res) => {
+// ✅ Login Employee
+const loginEmployee = async (req, res) => {
+  const { email, password } = req.body;
   try {
-    const { email, password } = req.body;
+    const [rows] = await db.query("SELECT * FROM users WHERE email = ? AND role = 'employee'", [email]);
+    const user = rows[0];
+    if (!user) return res.status(404).json({ error: "Employee not found" });
 
-    if(!email || !password) {
-      return res.status(400).json({error: "Email and Password are required"})
-    }
-    const [user] = await db.query("SELECT * FROM users WHERE email = ? AND role = ?", [email , role]);
-    if (user.length === 0) {
-      return res.status(400).json({ error: "Invalid email or password" });
-    }
+    const match = await bcrypt.compare(password, user.password);
+    if (!match) return res.status(401).json({ error: "Invalid credentials" });
 
-    const validPassword = await bcrypt.compare(password, user[0].password);
-    if (!validPassword) {
-      return res.status(400).json({ error: "Invalid email or password" });
-    }
-
-    const token = jwt.sign(
-      { id: user[0].id, role: user[0].role },
-      process.env.JWT_SECRET,
-      { expiresIn: "1h" }
-    );
-
-    res.json({
-      token,
-      user: {
-        id: user[0].id,
-        name: user[0].name,
-        email: user[0].email,
-        role: user[0].role,
-        employeeId: user[0].employeeId
-      },
-    });
+    const token = generateToken({ id: user.id, role: user.role });
+    res.cookie("employee_token", token, { httpOnly: true, secure: false });
+    res.json({ message: "Employee logged in successfully", token });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: "Server error" });
+    res.status(500).json({ error: "Login failed" });
   }
 };
 
-module.exports = {registerUser , loginUser }
+// ✅ Register HR
+const createHR = async (req, res) => {
+  const { name, email, password, department } = req.body;
+  try {
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    const [result] = await db.query(
+      "INSERT INTO users (name, email, password, role, department) VALUES (?, ?, ?, 'hr', ?)",
+      [name, email, hashedPassword, department]
+    );
+
+    const token = generateToken({ id: result.insertId, role: "hr" });
+    res.cookie("hr_token", token, { httpOnly: true, secure: false });
+
+    res.status(201).json({ message: "HR registered successfully", token });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "HR registration failed" });
+  }
+};
+
+
+// ✅ Login HR
+const loginHR = async (req, res) => {
+  const { email, password } = req.body;
+  try {
+    const [rows] = await db.query("SELECT * FROM users WHERE email = ? AND role = 'hr'", [email]);
+    const user = rows[0];
+    if (!user) return res.status(404).json({ error: "HR not found" });
+
+    const match = await bcrypt.compare(password, user.password);
+    if (!match) return res.status(401).json({ error: "Invalid credentials" });
+
+    const token = generateToken({ id: user.id, role: user.role });
+    res.cookie("hr_token", token, { httpOnly: true, secure: false });
+    res.json({ message: "HR logged in successfully", token });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Login failed" });
+  }
+};
+
+module.exports = { createEmployee, loginEmployee, createHR, loginHR };
