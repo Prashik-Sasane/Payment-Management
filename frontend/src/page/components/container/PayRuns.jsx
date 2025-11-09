@@ -40,7 +40,7 @@ const PayRuns = () => {
       setShowModal(false);
     } catch (err) {
       console.error(err);
-      alert("❌ Error creating pay run!");
+      alert("Error creating pay run!");
     }
   };
 
@@ -53,11 +53,11 @@ const PayRuns = () => {
       await api.post(`/api/payroll/process/${id}`, {
         bonusPercent: Number(bonusPercent),
       });
-      alert("✅ Payroll processed successfully!");
+      alert("Payroll processed successfully!");
       fetchPayRuns();
     } catch (err) {
       console.error(err);
-      alert("❌ Error processing payroll!");
+      alert("Error processing payroll!");
     }
   };
 
@@ -67,11 +67,11 @@ const PayRuns = () => {
   const handleCompletePayRun = async (id) => {
     try {
       await api.put(`/api/payroll/complete/${id}`);
-      alert("✅ Pay run marked as completed!");
+      alert("Pay run marked as completed!");
       fetchPayRuns();
     } catch (err) {
       console.error(err);
-      alert("❌ Error completing pay run!");
+      alert("Error completing pay run!");
     }
   };
 
@@ -84,11 +84,11 @@ const PayRuns = () => {
 
     try {
       await api.delete(`/api/payroll/${id}`);
-      alert("🗑️ Pay run deleted successfully!");
+      alert("Pay run deleted successfully!");
       fetchPayRuns();
     } catch (err) {
       console.error("Error deleting pay run:", err);
-      alert("❌ Failed to delete pay run!");
+      alert("Failed to delete pay run!");
     }
   };
 
@@ -108,7 +108,7 @@ const PayRuns = () => {
     <div className="flex">
       <Sidebar />
       <div className="flex-1 min-h-screen bg-gray-50 p-8">
-        {/* Header */}
+       
         <div className="flex justify-between items-center mb-8">
           <div>
             <h1 className="text-3xl font-bold text-gray-900">Pay Runs</h1>
@@ -227,7 +227,7 @@ const PayRuns = () => {
 
         {/* Create Pay Run Modal */}
         {showModal && (
-          <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+          <div className="fixed inset-0 flex items-center justify-center bg-opacity-50 z-50">
             <div className="bg-white rounded-lg p-6 w-full max-w-md shadow-lg">
               <h2 className="text-xl font-bold mb-4">Create New Pay Run</h2>
               <form onSubmit={handleCreatePayRun} className="space-y-4">
