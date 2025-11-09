@@ -1,19 +1,11 @@
 import React, { useState, useEffect } from "react";
-import {
-  FaSearch,
-  FaPlus,
-  FaTrash,
-  FaEye,
-  FaTasks,
-} from "react-icons/fa";
-import { Link, useNavigate } from "react-router-dom";
-import axios from "axios";
-import { useAuth } from "../../../context/AuthContext";
+import { FaSearch, FaPlus, FaTrash, FaEye } from "react-icons/fa";
+import { useNavigate } from "react-router-dom";
+import api from "../../../api/axios"; // Axios instance with baseURL and credentials
 import Sidebar from "../hr-sidebar/Sidebar.jsx";
-function Employees() {
-  const { user } = useAuth();
-  const navigate = useNavigate();
 
+function Employees() {
+  const navigate = useNavigate();
   const [employees, setEmployees] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterDepartment, setFilterDepartment] = useState("all");
@@ -29,73 +21,60 @@ function Employees() {
 
   const departments = ["Engineering", "HR", "Finance", "Marketing", "Sales"];
 
-  // 🔒 Protect route - only logged in users
-  // useEffect(() => {
-  //   if (!user) navigate("/");
-  // }, [user, navigate]);
+  // ------------------ FETCH EMPLOYEES ------------------ //
+  const fetchEmployees = async () => {
+    try {
+      const res = await api.get("/api/employeedata/data"); // Cookies handle auth
+      setEmployees(res.data);
+    } catch (err) {
+      console.error("Error fetching employees:", err);
+      navigate("/hr/login"); // Redirect if not authenticated
+    }
+  };
 
-  // ✅ Fetch employees from backend
   useEffect(() => {
-    const fetchEmployees = async () => {
-      try {
-        const token = localStorage.getItem("token");
-        const res = await axios.get("http://localhost:5000/api/employeedata/data", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        setEmployees(res.data);
-      } catch (err) {
-        console.error("Error fetching employees:", err);
-      }
-    };
     fetchEmployees();
   }, []);
 
-  // ✅ Add new employee
+  // ------------------ ADD EMPLOYEE ------------------ //
   const handleAddEmployee = async (e) => {
     e.preventDefault();
     try {
-      const token = localStorage.getItem("token");
-      const res = await axios.post(
-        "http://localhost:5000/api/employeedata/data",
-        newEmployee,
-        {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
+      const res = await api.post("/api/employeedata/data", newEmployee, {
+        headers: { "Content-Type": "application/json" },
+      });
       setEmployees([...employees, res.data]);
-      setNewEmployee({ name: "", email: "", department: "", position: "", salary: "", joinDate: "" });
+      setNewEmployee({
+        name: "",
+        email: "",
+        department: "",
+        position: "",
+        salary: "",
+        joinDate: "",
+      });
       setShowAddModal(false);
     } catch (err) {
       console.error("Error adding employee:", err);
     }
   };
 
-  // ✅ Delete employee
+  // ------------------ DELETE EMPLOYEE ------------------ //
   const handleDeleteEmployee = async (id) => {
-    if (window.confirm("Are you sure you want to delete this employee?")) {
-      try {
-        const token = localStorage.getItem("token");
-        await axios.delete(`http://localhost:5000/api/employeedata/data/${id}`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        setEmployees(employees.filter((emp) => emp.id !== id));
-      } catch (err) {
-        console.error("Error deleting employee:", err);
-      }
+    if (!window.confirm("Are you sure you want to delete this employee?")) return;
+    try {
+      await api.delete(`/api/employeedata/data/${id}`);
+      setEmployees(employees.filter((emp) => emp.id !== id));
+    } catch (err) {
+      console.error("Error deleting employee:", err);
     }
   };
 
-  // ✅ Filter employees
+  // ------------------ FILTERED EMPLOYEES ------------------ //
   const filteredEmployees = employees.filter((emp) => {
     const matchesSearch =
       emp.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       emp.email.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesDept =
-      filterDepartment === "all" || emp.department === filterDepartment;
+    const matchesDept = filterDepartment === "all" || emp.department === filterDepartment;
     return matchesSearch && matchesDept;
   });
 
@@ -180,12 +159,8 @@ function Employees() {
                         <div className="font-medium text-gray-900">{employee.name}</div>
                         <div className="text-sm text-gray-500">{employee.email}</div>
                       </td>
-                      <td className="px-6 py-4 text-sm text-gray-900">
-                        {employee.department}
-                      </td>
-                      <td className="px-6 py-4 text-sm text-gray-900">
-                        {employee.position}
-                      </td>
+                      <td className="px-6 py-4 text-sm text-gray-900">{employee.department}</td>
+                      <td className="px-6 py-4 text-sm text-gray-900">{employee.position}</td>
                       <td className="px-6 py-4 text-sm text-gray-900">
                         ₹{employee.salary?.toLocaleString()}
                       </td>
@@ -215,39 +190,26 @@ function Employees() {
               <div className="bg-white rounded-lg p-6 w-full max-w-md">
                 <h2 className="text-xl font-bold mb-4">Add New Employee</h2>
                 <form onSubmit={handleAddEmployee} className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Name</label>
-                    <input
-                      type="text"
-                      value={newEmployee.name}
-                      onChange={(e) =>
-                        setNewEmployee({ ...newEmployee, name: e.target.value })
-                      }
-                      required
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
-                    <input
-                      type="email"
-                      value={newEmployee.email}
-                      onChange={(e) =>
-                        setNewEmployee({ ...newEmployee, email: e.target.value })
-                      }
-                      required
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
-                    />
-                  </div>
+                  {["name", "email", "position", "salary", "joinDate"].map((field) => (
+                    <div key={field}>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        {field.charAt(0).toUpperCase() + field.slice(1)}
+                      </label>
+                      <input
+                        type={field === "email" ? "email" : field === "salary" ? "number" : field === "joinDate" ? "date" : "text"}
+                        value={newEmployee[field]}
+                        onChange={(e) => setNewEmployee({ ...newEmployee, [field]: e.target.value })}
+                        required
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
+                      />
+                    </div>
+                  ))}
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Department</label>
                     <select
                       value={newEmployee.department}
-                      onChange={(e) =>
-                        setNewEmployee({ ...newEmployee, department: e.target.value })
-                      }
+                      onChange={(e) => setNewEmployee({ ...newEmployee, department: e.target.value })}
                       required
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
                     >
@@ -258,45 +220,6 @@ function Employees() {
                         </option>
                       ))}
                     </select>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Position</label>
-                    <input
-                      type="text"
-                      value={newEmployee.position}
-                      onChange={(e) =>
-                        setNewEmployee({ ...newEmployee, position: e.target.value })
-                      }
-                      required
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Salary</label>
-                    <input
-                      type="number"
-                      value={newEmployee.salary}
-                      onChange={(e) =>
-                        setNewEmployee({ ...newEmployee, salary: e.target.value })
-                      }
-                      required
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Join Date</label>
-                    <input
-                      type="date"
-                      value={newEmployee.joinDate}
-                      onChange={(e) =>
-                        setNewEmployee({ ...newEmployee, joinDate: e.target.value })
-                      }
-                      required
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
-                    />
                   </div>
 
                   <div className="flex justify-end space-x-3">

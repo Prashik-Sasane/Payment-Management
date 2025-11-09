@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
-import { FaPlay, FaCheck, FaDownload, FaEye } from "react-icons/fa";
+import { FaPlay, FaCheck, FaDownload, FaEye, FaTrash } from "react-icons/fa";
 import Sidebar from "../hr-sidebar/Sidebar.jsx";
+import api from "../../../api/axios.jsx";
 
 const PayRuns = () => {
   const [payRuns, setPayRuns] = useState([]);
@@ -12,47 +13,34 @@ const PayRuns = () => {
   });
 
   // =========================
-  // FETCH PAYROLL DATA
+  // FETCH ALL PAY RUNS
   // =========================
   useEffect(() => {
-    fetch("/api/payroll", {
-      headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
-    })
-      .then((res) => res.json())
-      .then((data) => setPayRuns(data))
-      .catch((err) => console.error("Error fetching payroll:", err));
+    fetchPayRuns();
   }, []);
+
+  const fetchPayRuns = async () => {
+    try {
+      const res = await api.get("/api/payroll");
+      setPayRuns(res.data);
+    } catch (err) {
+      console.error("Error fetching payroll:", err);
+    }
+  };
 
   // =========================
   // CREATE PAY RUN
   // =========================
   const handleCreatePayRun = async (e) => {
     e.preventDefault();
-    const payRun = {
-      name: newPayRun.name,
-      startDate: newPayRun.startDate,
-      endDate: newPayRun.endDate,
-    };
-
     try {
-      const res = await fetch("http://localhost:5000/api/payroll/create", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-        body: JSON.stringify(payRun),
-      });
-
-      if (!res.ok) throw new Error("Failed to create pay run");
-
-      const newRun = await res.json();
-      setPayRuns([newRun, ...payRuns]);
+      const res = await api.post("/api/payroll/create", newPayRun);
+      setPayRuns([res.data, ...payRuns]);
       setNewPayRun({ name: "", startDate: "", endDate: "" });
       setShowModal(false);
     } catch (err) {
       console.error(err);
-      alert("Error creating pay run!");
+      alert("❌ Error creating pay run!");
     }
   };
 
@@ -61,25 +49,12 @@ const PayRuns = () => {
   // =========================
   const handleProcessPayRun = async (id) => {
     const bonusPercent = window.prompt("Enter bonus % (optional):", 0);
-
     try {
-      const res = await fetch(`http://localhost:5000/api/payroll/process/${id}`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-        body: JSON.stringify({ bonusPercent: Number(bonusPercent) }),
+      await api.post(`/api/payroll/process/${id}`, {
+        bonusPercent: Number(bonusPercent),
       });
-
-      if (!res.ok) throw new Error("Processing failed");
-
       alert("✅ Payroll processed successfully!");
-      // Refresh payroll list
-      const updated = await fetch("/api/payroll", {
-        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
-      }).then((r) => r.json());
-      setPayRuns(updated);
+      fetchPayRuns();
     } catch (err) {
       console.error(err);
       alert("❌ Error processing payroll!");
@@ -91,18 +66,9 @@ const PayRuns = () => {
   // =========================
   const handleCompletePayRun = async (id) => {
     try {
-      const res = await fetch(`http://localhost:5000/api/payroll/complete/${id}`, {
-        method: "PUT",
-        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
-      });
-
-      if (!res.ok) throw new Error("Failed to complete pay run");
-
+      await api.put(`/api/payroll/complete/${id}`);
       alert("✅ Pay run marked as completed!");
-      const updated = await fetch("http://localhost:5000/api/payroll", {
-        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
-      }).then((r) => r.json());
-      setPayRuns(updated);
+      fetchPayRuns();
     } catch (err) {
       console.error(err);
       alert("❌ Error completing pay run!");
@@ -110,7 +76,24 @@ const PayRuns = () => {
   };
 
   // =========================
-  //  STATUS COLOR
+  // DELETE PAY RUN
+  // =========================
+  const handleDeletePayRun = async (id) => {
+    const confirmDelete = window.confirm("Are you sure you want to delete this pay run?");
+    if (!confirmDelete) return;
+
+    try {
+      await api.delete(`/api/payroll/${id}`);
+      alert("🗑️ Pay run deleted successfully!");
+      fetchPayRuns();
+    } catch (err) {
+      console.error("Error deleting pay run:", err);
+      alert("❌ Failed to delete pay run!");
+    }
+  };
+
+  // =========================
+  // STATUS COLOR LOGIC
   // =========================
   const getStatusColor = (status) => {
     const colors = {
@@ -124,13 +107,14 @@ const PayRuns = () => {
   return (
     <div className="flex">
       <Sidebar />
-
       <div className="flex-1 min-h-screen bg-gray-50 p-8">
         {/* Header */}
         <div className="flex justify-between items-center mb-8">
           <div>
             <h1 className="text-3xl font-bold text-gray-900">Pay Runs</h1>
-            <p className="text-gray-600">Manage and process employee payments</p>
+            <p className="text-gray-600">
+              Manage and process employee payments
+            </p>
           </div>
           <button
             onClick={() => setShowModal(true)}
@@ -165,7 +149,9 @@ const PayRuns = () => {
                         {run.status}
                       </span>
                     </div>
-                    <p className="text-sm text-gray-600 mb-4">{run.period}</p>
+                    <p className="text-sm text-gray-600 mb-4">
+                      {run.startDate} - {run.endDate}
+                    </p>
 
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                       <div>
@@ -198,7 +184,7 @@ const PayRuns = () => {
                   </div>
 
                   {/* Action Buttons */}
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 flex-wrap">
                     {run.status === "Draft" && (
                       <button
                         onClick={() => handleProcessPayRun(run.id)}
@@ -225,6 +211,13 @@ const PayRuns = () => {
                         </button>
                       </>
                     )}
+                    {/* 🗑️ Delete button (always visible) */}
+                    <button
+                      onClick={() => handleDeletePayRun(run.id)}
+                      className="flex items-center gap-2 px-3 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
+                    >
+                      <FaTrash /> Delete
+                    </button>
                   </div>
                 </div>
               </div>
@@ -248,7 +241,7 @@ const PayRuns = () => {
                     onChange={(e) =>
                       setNewPayRun({ ...newPayRun, name: e.target.value })
                     }
-                    placeholder="e.g., August 2024 Pay Run"
+                    placeholder="e.g., August 2025 Pay Run"
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
                     required
                   />
@@ -262,7 +255,10 @@ const PayRuns = () => {
                       type="date"
                       value={newPayRun.startDate}
                       onChange={(e) =>
-                        setNewPayRun({ ...newPayRun, startDate: e.target.value })
+                        setNewPayRun({
+                          ...newPayRun,
+                          startDate: e.target.value,
+                        })
                       }
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
                       required
@@ -276,7 +272,10 @@ const PayRuns = () => {
                       type="date"
                       value={newPayRun.endDate}
                       onChange={(e) =>
-                        setNewPayRun({ ...newPayRun, endDate: e.target.value })
+                        setNewPayRun({
+                          ...newPayRun,
+                          endDate: e.target.value,
+                        })
                       }
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
                       required

@@ -23,119 +23,150 @@ function EmployeeDashboard() {
   const [loading, setLoading] = useState(false);
   const [activeSection, setActiveSection] = useState("overview");
 
-  const [employeeData, setEmployeeData] = useState({
-    name: "",
-    employeeId: "",
-    department: "",
-    position: "",
-    salary: 0,
-    email: "",
-    phone: "",
-    bankAccounts: [],
-    leaveBalance: 15,
-    usedLeaves: 0,
-  });
+  // ------------------ STATE ------------------ //
+const [employeeData, setEmployeeData] = useState({
+  name: "",
+  id: "", // ✅ changed from employeeId → id (for consistency with backend)
+  department: "",
+  position: "",
+  salary: 0,
+  email: "",
+  phone: "",
+  bankAccounts: [],
+  leaveBalance: 15,
+  usedLeaves: 0,
+  leaveHistory: [], // ✅ added this (for Leave History section)
+});
 
-  const [bankForm, setBankForm] = useState({
-    accountNumber: "",
-    bankName: "",
-    ifscCode: "",
-    accountHolderName: "",
-  });
+const [bankForm, setBankForm] = useState({
+  accountNumber: "",
+  bankName: "",
+  ifscCode: "",
+  accountHolderName: "",
+});
 
-  const [leaveForm, setLeaveForm] = useState({
-    leaveType: "",
-    startDate: "",
-    endDate: "",
-    reason: "",
-    days: 0,
-  });
+const [leaveForm, setLeaveForm] = useState({
+  leaveType: "",
+  startDate: "",
+  endDate: "",
+  reason: "",
+  days: 0,
+});
+// ------------------ FETCH FUNCTIONS ------------------ //
 
-  // ------------------ FETCH FUNCTIONS ------------------ //
-  const fetchProfile = async () => {
-    try {
-      const res = await api.get("/api/employee/profile");
-      setUser(res.data.user);
-      setEmployeeData((prev) => ({
-        ...prev,
-        name: res.data.user.name,
-        email: res.data.user.email,
-        employeeId: res.data.user.id,
-        department: res.data.user.department || prev.department,
-        position: res.data.user.position || prev.position,
-        salary: res.data.user.salary || prev.salary,
-        phone: res.data.user.phone || prev.phone,
-      }));
-    } catch (err) {
-      console.error("Failed to fetch profile:", err);
-      navigate("/employee/login");
-    }
-  };
+const fetchProfile = async () => {
+  try {
+    const res = await api.get("/api/employee/profile");
+    setUser(res.data.user);
+    setEmployeeData((prev) => ({
+      ...prev,
+      name: res.data.user.name,
+      email: res.data.user.email,
+      id: res.data.user.id,
+      department: res.data.user.department || prev.department,
+      position: res.data.user.position || prev.position,
+      salary: res.data.user.salary || prev.salary,
+      phone: res.data.user.phone || prev.phone,
+    }));
+  } catch (err) {
+    console.error("Failed to fetch profile:", err);
+    navigate("/employee/login");
+  }
+};
 
-  const fetchBankAccounts = async () => {
-    try {
-      const res = await api.get("/api/employee/bank");
-      setEmployeeData((prev) => ({
-        ...prev,
-        bankAccounts: res.data.accounts || [],
-      }));
-    } catch (err) {
-      console.error("Failed to fetch bank accounts:", err);
-    }
-  };
+const fetchBankAccounts = async () => {
+  try {
+    const res = await api.get("/api/employee/bank");
+    setEmployeeData((prev) => ({
+      ...prev,
+      bankAccounts: res.data || [],
+    }));
+  } catch (err) {
+    console.error("Failed to fetch bank accounts:", err);
+  }
+};
 
-  const fetchLeaveBalance = async () => {
-    try {
-      const res = await api.get("/api/employee/leave-balance");
-      setEmployeeData((prev) => ({
-        ...prev,
-        leaveBalance: res.data.leaveBalance,
-        usedLeaves: res.data.usedLeaves || 0,
-      }));
-    } catch (err) {
-      console.error("Failed to fetch leave balance:", err);
-    }
-  };
+const fetchLeaveBalance = async () => {
+  try {
+    const res = await api.get("/api/employee/leave-balance");
+    setEmployeeData((prev) => ({
+      ...prev,
+      leaveBalance: res.data[0]?.remaining_leaves || prev.leaveBalance,
+      usedLeaves: res.data[0]?.used_leaves || prev.usedLeaves,
+    }));
+  } catch (err) {
+    console.error("Failed to fetch leave balance:", err);
+  }
+};
 
-  useEffect(() => {
-    fetchProfile();
-    fetchBankAccounts();
-    fetchLeaveBalance();
-  }, []);
+const fetchLeaveHistory = async () => {
+  try {
+    const res = await api.get("/api/employee/leave-history");
+    setEmployeeData((prev) => ({
+      ...prev,
+      leaveHistory: res.data || [],
+    }));
+  } catch (err) {
+    console.error("Failed to fetch leave history:", err);
+  }
+};
 
-  // ------------------ FORM HANDLERS ------------------ //
-  const handleBankSubmit = async (e) => {
-    e.preventDefault();
-    try {
-      const res = await api.post("/api/employee/bank", bankForm);
-      alert(res.data.message || "Bank account added successfully!");
-      setBankForm({
-        accountNumber: "",
-        bankName: "",
-        ifscCode: "",
-        accountHolderName: "",
-      });
-      setEmployeeData((prev) => ({
-        ...prev,
-        bankAccounts: [
-          ...prev.bankAccounts,
-          {
-            bank_name: bankForm.bankName,
-            account_number: bankForm.accountNumber,
-            ifsc_code: bankForm.ifscCode,
-            account_holder_name: bankForm.accountHolderName,
-          },
-        ],
-      }));
-    } catch (err) {
-      alert(err.response?.data?.error || "Failed to add bank account");
-    }
-  };
+// Combined fetch function
+const fetchEmployeeData = async () => {
+  await Promise.all([
+    fetchProfile(),
+    fetchBankAccounts(),
+    fetchLeaveBalance(),
+    fetchLeaveHistory(),
+  ]);
+};
 
-  const handleLeaveSubmit = async (e) => {
+useEffect(() => {
+  fetchEmployeeData();
+}, []);
+
+// ------------------ FORM HANDLERS ------------------ //
+
+const handleBankSubmit = async (e) => {
+  e.preventDefault();
+  try {
+    const res = await api.post("/api/employee/bank", bankForm);
+    alert(res.data.message || "Bank account added successfully!");
+    setBankForm({
+      accountNumber: "",
+      bankName: "",
+      ifscCode: "",
+      accountHolderName: "",
+    });
+
+    await fetchEmployeeData(); //  Refresh data
+    setActiveSection("overview"); //  Navigate to Overview
+  } catch (err) {
+    alert(err.response?.data?.error || "Failed to add bank account");
+  }
+};
+
+const handleDeleteBank = async (accountId) => {
+  if (!window.confirm("Are you sure you want to delete this bank account?")) return;
+  
+  try {
+    const res = await api.delete(`/api/employee/bank/${accountId}`);
+    alert(res.data.message);
+
+    // Remove from state without refreshing
+    setEmployeeData((prev) => ({
+      ...prev,
+      bankAccounts: prev.bankAccounts.filter((acc) => acc.id !== accountId),
+    }));
+  } catch (err) {
+    alert(err.response?.data?.error || "Failed to delete bank account");
+  }
+};
+
+
+const handleLeaveSubmit = async (e) => {
   e.preventDefault();
   const { startDate, endDate } = leaveForm;
-
   const days =
     Math.ceil((new Date(endDate) - new Date(startDate)) / (1000 * 60 * 60 * 24)) + 1;
 
@@ -148,7 +179,6 @@ function EmployeeDashboard() {
     const res = await api.post("/api/employee/leave", { ...leaveForm, days });
     alert(res.data.message || "Leave applied successfully!");
 
-    // ✅ Reset the form
     setLeaveForm({
       leaveType: "",
       startDate: "",
@@ -157,40 +187,49 @@ function EmployeeDashboard() {
       days: 0,
     });
 
-    // ✅ Update state to reflect the new leave + update balances
-    setEmployeeData((prev) => ({
-      ...prev,
-      leaveBalance: prev.leaveBalance - days,
-      usedLeaves: prev.usedLeaves + days,
-      leaveHistory: [
-        {
-          leave_type: leaveForm.leaveType,
-          start_date: leaveForm.startDate,
-          end_date: leaveForm.endDate,
-          days,
-          status: "PENDING", // since HR will approve/reject later
-        },
-        ...(prev.leaveHistory || []), // ✅ Add new leave at top of history
-      ],
-    }));
+    await fetchEmployeeData(); //  Refresh backend data
+    setActiveSection("overview"); //  Return to overview
   } catch (err) {
     alert(err.response?.data?.error || "Failed to apply leave");
   }
 };
 
+const handleDeleteLeave = async (leaveId, days) => {
+  if (!window.confirm("Are you sure you want to delete this leave?")) return;
 
-  const handleProfileUpdate = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    try {
-      await api.put("/api/employee/update-profile", employeeData);
-      alert("Profile updated successfully!");
-    } catch (err) {
-      alert("Failed to update profile");
-    } finally {
-      setLoading(false);
-    }
-  };
+  try {
+    await api.delete(`/api/employee/leave/${leaveId}`);
+
+    // Update state
+    setEmployeeData((prev) => ({
+      ...prev,
+      leaveBalance: prev.leaveBalance + days,
+      usedLeaves: prev.usedLeaves - days,
+      leaveHistory: prev.leaveHistory.filter((l) => l.id !== leaveId),
+    }));
+
+    alert("Leave deleted successfully!");
+  } catch (err) {
+    console.error("Failed to delete leave:", err);
+    alert("Failed to delete leave");
+  }
+};
+
+
+const handleProfileUpdate = async (e) => {
+  e.preventDefault();
+  setLoading(true);
+  try {
+    await api.put("/api/employee/update-profile", employeeData);
+    alert("Profile updated successfully!");
+    await fetchEmployeeData(); // Refresh
+    setActiveSection("overview"); // Return to overview
+  } catch (err) {
+    alert("Failed to update profile");
+  } finally {
+    setLoading(false);
+  }
+};
 
   // ------------------ SALARY GRAPH ------------------ //
   const salaryData = {
@@ -248,7 +287,7 @@ function EmployeeDashboard() {
                   <p className="text-gray-500 font-medium">{employeeData.position} • {employeeData.department}</p>
                   <div className="flex items-center gap-4 mt-4">
                     <span className="bg-indigo-100 text-indigo-700 px-3 py-1 rounded-full text-sm font-semibold">
-                      ID: {employeeData.employeeId}
+                      ID: {employeeData.id}
                     </span>
                     <span className="bg-green-100 text-green-600 px-3 py-1 rounded-full text-sm font-semibold">
                       Salary: ₹{employeeData.salary}
@@ -260,7 +299,7 @@ function EmployeeDashboard() {
                 </div>
               </div>
 
-              {/* Quick Stats Grid */}
+             
               <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                 <div className="bg-white rounded-xl shadow-md p-6">
                   <h3 className="text-sm font-medium text-gray-600 mb-2">Email</h3>
@@ -347,7 +386,7 @@ function EmployeeDashboard() {
               <section>
                 <h2 className="text-2xl font-bold mb-6">Bank Details</h2>
 
-                {/* Add Bank Account Form */}
+                {/* Add Bank Form */}
                 <form
                   onSubmit={handleBankSubmit}
                   className="bg-white p-6 rounded-2xl shadow mb-6 max-w-lg"
@@ -361,7 +400,9 @@ function EmployeeDashboard() {
                         type="text"
                         name="accountHolderName"
                         value={bankForm.accountHolderName}
-                        onChange={(e) => setBankForm({ ...bankForm, accountHolderName: e.target.value })}
+                        onChange={(e) =>
+                          setBankForm({ ...bankForm, accountHolderName: e.target.value })
+                        }
                         required
                         className="w-full border rounded-lg px-3 py-2"
                         placeholder="Enter account holder name"
@@ -374,7 +415,9 @@ function EmployeeDashboard() {
                         type="text"
                         name="accountNumber"
                         value={bankForm.accountNumber}
-                        onChange={(e) => setBankForm({ ...bankForm, accountNumber: e.target.value })}
+                        onChange={(e) =>
+                          setBankForm({ ...bankForm, accountNumber: e.target.value })
+                        }
                         required
                         className="w-full border rounded-lg px-3 py-2"
                         placeholder="Enter account number"
@@ -387,7 +430,9 @@ function EmployeeDashboard() {
                         type="text"
                         name="bankName"
                         value={bankForm.bankName}
-                        onChange={(e) => setBankForm({ ...bankForm, bankName: e.target.value })}
+                        onChange={(e) =>
+                          setBankForm({ ...bankForm, bankName: e.target.value })
+                        }
                         required
                         className="w-full border rounded-lg px-3 py-2"
                         placeholder="Enter bank name"
@@ -400,7 +445,9 @@ function EmployeeDashboard() {
                         type="text"
                         name="ifscCode"
                         value={bankForm.ifscCode}
-                        onChange={(e) => setBankForm({ ...bankForm, ifscCode: e.target.value })}
+                        onChange={(e) =>
+                          setBankForm({ ...bankForm, ifscCode: e.target.value })
+                        }
                         required
                         className="w-full border rounded-lg px-3 py-2"
                         placeholder="Enter IFSC code"
@@ -416,160 +463,186 @@ function EmployeeDashboard() {
                   </button>
                 </form>
 
-                {/* List of Bank Accounts */}
+                {/* Bank Accounts List */}
                 <div className="bg-white p-6 rounded-2xl shadow">
                   <h3 className="text-lg font-semibold mb-3">Your Bank Accounts</h3>
+
                   {employeeData.bankAccounts && employeeData.bankAccounts.length > 0 ? (
                     <ul>
                       {employeeData.bankAccounts.map((acc, idx) => (
-                        <li key={idx} className="border-b py-2">
-                          <p><strong>{acc.bank_name}</strong> — {acc.account_number}</p>
-                          <p className="text-sm text-gray-500">IFSC: {acc.ifsc_code}</p>
-                          <p className="text-sm text-gray-500">Holder: {acc.account_holder_name}</p>
+                        <li
+                          key={idx}
+                          className="border-b py-3 flex items-center justify-between"
+                        >
+                          <div>
+                            <p className="font-semibold">
+                              {acc.bank_name} — {acc.account_number}
+                            </p>
+                            <p className="text-sm text-gray-500">IFSC: {acc.ifsc_code}</p>
+                            <p className="text-sm text-gray-500">
+                              Holder: {acc.account_holder_name}
+                            </p>
+                          </div>
+
+                          {/* 🗑 Delete Button */}
+                          <button
+                            onClick={() => handleDeleteBank(acc.id)}
+                            className="text-red-600 hover:text-red-800 font-semibold text-sm"
+                          >
+                            Delete
+                          </button>
                         </li>
                       ))}
                     </ul>
                   ) : (
-                    <p>No bank accounts added yet.</p>
+                    <p className="text-gray-500">No bank accounts added yet.</p>
                   )}
                 </div>
               </section>
             )}
 
             {activeSection === "leave" && (
-                <section>
-                  <h2 className="text-2xl font-bold mb-6">Leave Application</h2>
+                  <section>
+                    <h2 className="text-2xl font-bold mb-6">Leave Application</h2>
 
-                  {/* Leave Form */}
-                  <form
-                    onSubmit={handleLeaveSubmit}
-                    className="bg-white p-6 rounded-2xl shadow mb-8 max-w-2xl"
-                  >
-                    <h3 className="text-lg font-semibold mb-4">Apply for Leave</h3>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-sm font-medium mb-1">Leave Type</label>
-                        <select
-                          name="leaveType"
-                          value={leaveForm.leaveType}
-                          onChange={(e) => setLeaveForm({ ...leaveForm, leaveType: e.target.value })}
-                          required
-                          className="w-full border rounded-lg px-3 py-2"
-                        >
-                          <option value="">Select Type</option>
-                          <option value="Casual Leave">Casual Leave</option>
-                          <option value="Sick Leave">Sick Leave</option>
-                          <option value="Earned Leave">Earned Leave</option>
-                        </select>
-                      </div>
-
-                      <div>
-                        <label className="block text-sm font-medium mb-1">Start Date</label>
-                        <input
-                          type="date"
-                          name="startDate"
-                          value={leaveForm.startDate}
-                          onChange={(e) => setLeaveForm({ ...leaveForm, startDate: e.target.value })}
-                          required
-                          className="w-full border rounded-lg px-3 py-2"
-                        />
-                      </div>
-
-                      <div>
-                        <label className="block text-sm font-medium mb-1">End Date</label>
-                        <input
-                          type="date"
-                          name="endDate"
-                          value={leaveForm.endDate}
-                          onChange={(e) => setLeaveForm({ ...leaveForm, endDate: e.target.value })}
-                          required
-                          className="w-full border rounded-lg px-3 py-2"
-                        />
-                      </div>
-
-                      <div className="md:col-span-2">
-                        <label className="block text-sm font-medium mb-1">Reason</label>
-                        <textarea
-                          name="reason"
-                          value={leaveForm.reason}
-                          onChange={(e) => setLeaveForm({ ...leaveForm, reason: e.target.value })}
-                          required
-                          className="w-full border rounded-lg px-3 py-2"
-                          placeholder="Explain your reason for leave"
-                        ></textarea>
-                      </div>
-                    </div>
-
-                    <button
-                      type="submit"
-                      className="mt-4 bg-[#554CFF] text-white px-4 py-2 rounded-lg hover:bg-indigo-600"
+                    {/* Leave Form */}
+                    <form
+                      onSubmit={handleLeaveSubmit}
+                      className="bg-white p-6 rounded-2xl shadow mb-8 max-w-2xl"
                     >
-                      Apply Leave
-                    </button>
-                  </form>
+                      <h3 className="text-lg font-semibold mb-4">Apply for Leave</h3>
 
-                  {/* Leave Summary */}
-                  <div className="bg-white p-6 rounded-2xl shadow mb-8 max-w-2xl">
-                    <h3 className="text-lg font-semibold mb-3">Leave Summary</h3>
-                    <div className="flex items-center gap-8 text-lg">
-                      <p>
-                        <strong>Available:</strong>{" "}
-                        <span className="text-green-600 font-semibold">
-                          {employeeData.leaveBalance} Days
-                        </span>
-                      </p>
-                      <p>
-                        <strong>Used:</strong>{" "}
-                        <span className="text-red-600 font-semibold">
-                          {employeeData.usedLeaves} Days
-                        </span>
-                      </p>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-sm font-medium mb-1">Leave Type</label>
+                          <select
+                            name="leaveType"
+                            value={leaveForm.leaveType}
+                            onChange={(e) => setLeaveForm({ ...leaveForm, leaveType: e.target.value })}
+                            required
+                            className="w-full border rounded-lg px-3 py-2"
+                          >
+                            <option value="">Select Type</option>
+                            <option value="Casual Leave">Casual Leave</option>
+                            <option value="Sick Leave">Sick Leave</option>
+                            <option value="Earned Leave">Earned Leave</option>
+                          </select>
+                        </div>
+
+                        <div>
+                          <label className="block text-sm font-medium mb-1">Start Date</label>
+                          <input
+                            type="date"
+                            name="startDate"
+                            value={leaveForm.startDate}
+                            onChange={(e) => setLeaveForm({ ...leaveForm, startDate: e.target.value })}
+                            required
+                            className="w-full border rounded-lg px-3 py-2"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-sm font-medium mb-1">End Date</label>
+                          <input
+                            type="date"
+                            name="endDate"
+                            value={leaveForm.endDate}
+                            onChange={(e) => setLeaveForm({ ...leaveForm, endDate: e.target.value })}
+                            required
+                            className="w-full border rounded-lg px-3 py-2"
+                          />
+                        </div>
+
+                        <div className="md:col-span-2">
+                          <label className="block text-sm font-medium mb-1">Reason</label>
+                          <textarea
+                            name="reason"
+                            value={leaveForm.reason}
+                            onChange={(e) => setLeaveForm({ ...leaveForm, reason: e.target.value })}
+                            required
+                            className="w-full border rounded-lg px-3 py-2"
+                            placeholder="Explain your reason for leave"
+                          ></textarea>
+                        </div>
+                      </div>
+
+                      <button
+                        type="submit"
+                        className="mt-4 bg-[#554CFF] text-white px-4 py-2 rounded-lg hover:bg-indigo-600"
+                      >
+                        Apply Leave
+                      </button>
+                    </form>
+
+                    {/* Leave Summary */}
+                    <div className="bg-white p-6 rounded-2xl shadow mb-8 max-w-2xl">
+                      <h3 className="text-lg font-semibold mb-3">Leave Summary</h3>
+                      <div className="flex items-center gap-8 text-lg">
+                        <p>
+                          <strong>Available:</strong>{" "}
+                          <span className="text-green-600 font-semibold">{employeeData.leaveBalance} Days</span>
+                        </p>
+                        <p>
+                          <strong>Used:</strong>{" "}
+                          <span className="text-red-600 font-semibold">{employeeData.usedLeaves} Days</span>
+                        </p>
+                      </div>
                     </div>
-                  </div>
 
-                  {/* Leave History */}
-                  <div className="bg-white p-6 rounded-2xl shadow max-w-4xl">
-                    <h3 className="text-lg font-semibold mb-3">Leave History</h3>
-                    {employeeData.leaveHistory && employeeData.leaveHistory.length > 0 ? (
-                      <table className="w-full text-left border">
-                        <thead>
-                          <tr className="bg-gray-100 text-sm text-gray-600">
-                            <th className="p-2 border">Type</th>
-                            <th className="p-2 border">Dates</th>
-                            <th className="p-2 border">Days</th>
-                            <th className="p-2 border">Status</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {employeeData.leaveHistory.map((leave, idx) => (
-                            <tr key={idx} className="text-sm hover:bg-gray-50">
-                              <td className="p-2 border">{leave.leave_type}</td>
-                              <td className="p-2 border">
-                                {leave.start_date} → {leave.end_date}
-                              </td>
-                              <td className="p-2 border text-center">{leave.days}</td>
-                              <td className="p-2 border text-center">
-                                {leave.status === "APPROVED" && (
-                                  <span className="text-green-600 font-semibold">Approved</span>
-                                )}
-                                {leave.status === "REJECTED" && (
-                                  <span className="text-red-600 font-semibold">Rejected</span>
-                                )}
-                                {leave.status === "PENDING" && (
-                                  <span className="text-yellow-600 font-semibold">Pending</span>
-                                )}
-                              </td>
+                    {/* Leave History */}
+                    <div className="bg-white p-6 rounded-2xl shadow max-w-4xl">
+                      <h3 className="text-lg font-semibold mb-3">Leave History</h3>
+                      {employeeData.leaveHistory && employeeData.leaveHistory.length > 0 ? (
+                        <table className="w-full text-left border">
+                          <thead>
+                            <tr className="bg-gray-100 text-sm text-gray-600">
+                              <th className="p-2 border">Type</th>
+                              <th className="p-2 border">Dates</th>
+                              <th className="p-2 border">Days</th>
+                              <th className="p-2 border">Status</th>
+                              <th className="p-2 border text-center">Actions</th>
                             </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    ) : (
-                      <p className="text-gray-500">No leave applications yet.</p>
-                    )}
-                  </div>
-                </section>
-              )}
+                          </thead>
+                          <tbody>
+                            {employeeData.leaveHistory.map((leave) => (
+                              <tr key={leave.id} className="text-sm hover:bg-gray-50">
+                                <td className="p-2 border">{leave.leave_type}</td>
+                                <td className="p-2 border">
+                                  {leave.start_date} → {leave.end_date}
+                                </td>
+                                <td className="p-2 border text-center">{leave.days}</td>
+                                <td className="p-2 border text-center">
+                                  {leave.status === "APPROVED" && (
+                                    <span className="text-green-600 font-semibold">Approved</span>
+                                  )}
+                                  {leave.status === "REJECTED" && (
+                                    <span className="text-red-600 font-semibold">Rejected</span>
+                                  )}
+                                  {leave.status === "PENDING" && (
+                                    <span className="text-yellow-600 font-semibold">Pending</span>
+                                  )}
+                                </td>
+                                <td className="p-2 border text-center">
+                                  {leave.status === "PENDING" && (
+                                    <button
+                                      onClick={() => handleDeleteLeave(leave.id, leave.days)}
+                                      className="text-red-500 hover:text-red-700"
+                                      title="Delete Leave"
+                                    >
+                                      🗑️
+                                    </button>
+                                  )}
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      ) : (
+                        <p className="text-gray-500">No leave applications yet.</p>
+                      )}
+                    </div>
+                  </section>
+                )}
 
         {activeSection === "edit-profile" && (
             <section className="flex-1 p-8 bg-gray-50 min-h-screen overflow-y-auto">

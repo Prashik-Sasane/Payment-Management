@@ -1,130 +1,125 @@
 import React from "react";
+import { Link } from "react-router-dom";
+import { motion } from "framer-motion";
+import { FaMoneyCheckAlt, FaUsers, FaChartLine } from "react-icons/fa";
 
-const navItems = [
-  { label: "Dashboard", href: "/dashboard" },
-  { label: "Employees", href: "/employees" },
-  { label: "Payroll", href: "/payroll" },
-  { label: "Reports", href: "/reports" },
-  { label: "Settings", href: "/settings" },
-];
-
-const features = [
-  {
-    title: "Instant Salary Transfers",
-    desc: "Seamlessly transfer salaries securely with one click. Stay compliant and never miss a payment cycle.",
-    icon: (
-      <svg className="w-8 h-8 text-black" fill="none" viewBox="0 0 24 24">
-        <circle cx="12" cy="12" r="8" fill="currentColor" />
-      </svg>
-    ),
-  },
-  {
-    title: "Employee Directory",
-    desc: "Centralize all employee data, roles, and attendance in one secure dashboard.",
-    icon: (
-      <svg className="w-8 h-8 text-black" fill="none" viewBox="0 0 24 24">
-        <rect x="4" y="4" width="16" height="16" fill="currentColor" />
-      </svg>
-    ),
-  },
-  {
-    title: "Payroll Reports",
-    desc: "Export precise payroll, tax, and expense reports in seconds for your records and audits.",
-    icon: (
-      <svg className="w-8 h-8 text-black" fill="none" viewBox="0 0 24 24">
-        <ellipse cx="12" cy="12" rx="8" ry="10" fill="currentColor" />
-      </svg>
-    ),
-  },
-];
-
-const PayrollLandingPage = () => (
-  <div className="min-h-screen flex flex-col bg-gradient-to-br from-white via-gray-100 to-black text-black font-sans">
-    {/* Navbar */}
-    <nav className="flex items-center justify-between px-10 h-20 bg-white shadow-md">
-      <div className="flex items-center gap-4">
-        <img src="/payroll-logo.svg" alt="PayrollPro Logo" className="h-9" />
-        <span className="font-bold text-xl tracking-wider">PayRollPro</span>
-      </div>
-      <div className="flex items-center gap-8">
-        <div className="relative">
-          <input
-            type="text"
-            placeholder="Search employee"
-            className="bg-gray-100 text-black rounded-full pl-9 pr-4 py-2 text-sm outline-none border border-gray-300 focus:border-black transition"
-          />
-          <span className="absolute left-3 top-2.5">
-            <svg className="w-5 h-5 text-black" fill="none" viewBox="0 0 24 24">
-              <circle cx="12" cy="12" r="10" stroke="black" />
-            </svg>
-          </span>
+export default function LandingPage() {
+  return (
+    <div className="min-h-screen bg-gradient-to-b from-sky-50 to-white text-gray-800 flex flex-col">
+      {/* Navbar */}
+      <nav className="flex justify-between items-center px-10 py-6 shadow-sm bg-white">
+        <h1 className="text-2xl font-bold text-sky-600">PayMaster</h1>
+        <div className="flex gap-6 font-semibold">
+          <Link to="/" className="hover:text-sky-600">Home</Link>
+          <Link to="/about" className="hover:text-sky-600">About</Link>
+          <Link to="/contact" className="hover:text-sky-600">Contact</Link>
         </div>
-        <button className="p-2 hover:bg-gray-200 rounded-full">
-          <svg className="w-6 h-6 text-black" fill="none" viewBox="0 0 24 24">
-            <rect x="4" y="4" width="16" height="16" stroke="black" />
-          </svg>
-        </button>
-        <button className="p-2 hover:bg-gray-200 rounded-full flex items-center">
-          <svg className="w-6 h-6 text-black" fill="none" viewBox="0 0 24 24">
-            <ellipse cx="12" cy="12" rx="8" ry="10" stroke="black" />
-          </svg>
-        </button>
-      </div>
-    </nav>
+        <div className="flex gap-4">
+          <Link
+            to="/hr/login"
+            className="px-5 py-2 border border-sky-500 text-sky-500 rounded-lg hover:bg-sky-50"
+          >
+            HR Login
+          </Link>
+          <Link
+            to="/employee/login"
+            className="px-5 py-2 bg-sky-500 text-white rounded-lg hover:bg-sky-600"
+          >
+            Employee Login
+          </Link>
+        </div>
+      </nav>
 
-    {/* Main Content */}
-    <div className="flex flex-1">
-      {/* Sidebar */}
-      <aside className="w-60 bg-gray-100 border-r border-gray-300 flex flex-col pt-8 pb-8 px-4 shadow-lg">
-        <nav className="flex flex-col gap-2">
-          {navItems.map((item) => (
-            <a
-              href={item.href}
-              key={item.label}
-              className="flex items-center gap-4 py-2 px-4 rounded-lg text-gray-700 hover:bg-black hover:text-white transition font-medium"
-            >
-              <span className="inline-block w-2 h-2 rounded-full bg-black"></span>
-              {item.label}
-            </a>
-          ))}
-        </nav>
-        <div className="mt-auto mb-4 text-xs text-gray-400 opacity-80 pl-4">Admin Access</div>
-      </aside>
-
-      {/* Hero + Features */}
-      <section className="flex-1 flex flex-col items-center justify-center px-2 py-8">
-        <div className="max-w-2xl text-center">
-          <h1 className="text-5xl md:text-6xl font-extrabold mb-5 text-black">
-            Effortless Payroll, Elevated HR
-          </h1>
-          <p className="text-lg text-gray-700 mb-10">
-            Run payroll seamlessly with automated employee management, rapid compliance, and enterprise-grade security.
+      {/* Hero Section */}
+      <section className="flex flex-col md:flex-row items-center justify-between px-10 md:px-20 py-20">
+        <motion.div
+          initial={{ opacity: 0, y: 40 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.7 }}
+          className="md:w-1/2"
+        >
+          <h2 className="text-5xl font-extrabold text-[#1e293b] leading-tight">
+            Streamline Your <span className="text-sky-600">Payroll</span> and Employee Management
+          </h2>
+          <p className="mt-5 text-gray-600 text-lg">
+            Automate salary processing, manage employee data, and generate insightful reports — all from one secure dashboard.
           </p>
-          <button className="px-8 py-3 bg-black hover:bg-gray-800 text-white font-semibold rounded-full shadow transition mb-10">
-            Start Free Trial
-          </button>
-        </div>
-        {/* Cards */}
-        <div className="flex flex-col sm:flex-row gap-8 w-full max-w-4xl justify-center items-stretch">
-          {features.map((card, idx) => (
-            <div
-              key={idx}
-              className="flex flex-col items-center bg-white border border-gray-300 rounded-2xl shadow-xl px-8 py-7 min-w-[230px] transition hover:scale-105"
+          <div className="mt-8 flex gap-4">
+            <Link
+              to="/hr/register"
+              className="px-6 py-3 bg-sky-500 text-white font-semibold rounded-lg hover:bg-sky-600 transition"
             >
-              <div className="mb-4">{card.icon}</div>
-              <h3 className="font-semibold text-lg mb-2 text-black">{card.title}</h3>
-              <p className="text-sm text-gray-600 text-center">{card.desc}</p>
-            </div>
-          ))}
+              Get Started
+            </Link>
+            <Link
+              to="/about"
+              className="px-6 py-3 border border-sky-500 text-sky-600 font-semibold rounded-lg hover:bg-sky-50 transition"
+            >
+              Learn More
+            </Link>
+          </div>
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, x: 80 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.7 }}
+          className="md:w-1/2 mt-12 md:mt-0 flex justify-center"
+        >
+          <img
+            src="https://cdni.iconscout.com/illustration/premium/thumb/payroll-management-system-illustration-download-in-svg-png-gif-file-formats--salary-process-financial-human-resource-hr-business-people-pack-illustrations-6612943.png"
+            alt="Payroll Illustration"
+            className="w-[90%] rounded-2xl shadow-md"
+          />
+        </motion.div>
+      </section>
+
+      {/* Features Section */}
+      <section className="py-20 bg-sky-50">
+        <h3 className="text-3xl font-bold text-center text-[#1e293b] mb-12">
+          Key Features
+        </h3>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 px-10 md:px-20">
+          <motion.div
+            whileHover={{ scale: 1.05 }}
+            className="bg-white rounded-xl shadow-lg p-8 text-center"
+          >
+            <FaMoneyCheckAlt className="text-sky-600 text-5xl mx-auto mb-4" />
+            <h4 className="text-xl font-semibold mb-2">Automated Payroll</h4>
+            <p className="text-gray-600">
+              Simplify salary calculations, tax deductions, and payslip generation with automation.
+            </p>
+          </motion.div>
+
+          <motion.div
+            whileHover={{ scale: 1.05 }}
+            className="bg-white rounded-xl shadow-lg p-8 text-center"
+          >
+            <FaUsers className="text-sky-600 text-5xl mx-auto mb-4" />
+            <h4 className="text-xl font-semibold mb-2">Employee Management</h4>
+            <p className="text-gray-600">
+              Manage employee details, attendance, and roles efficiently in one dashboard.
+            </p>
+          </motion.div>
+
+          <motion.div
+            whileHover={{ scale: 1.05 }}
+            className="bg-white rounded-xl shadow-lg p-8 text-center"
+          >
+            <FaChartLine className="text-sky-600 text-5xl mx-auto mb-4" />
+            <h4 className="text-xl font-semibold mb-2">Analytics & Reports</h4>
+            <p className="text-gray-600">
+              Gain real-time insights into salary expenses, taxes, and workforce data.
+            </p>
+          </motion.div>
         </div>
       </section>
+
+      {/* Footer */}
+      <footer className="mt-auto py-6 bg-white text-center text-gray-500 border-t">
+        © {new Date().getFullYear()} PayMaster. All rights reserved.
+      </footer>
     </div>
+  );
+}
 
-    {/* Footer */}
-    <footer className="w-full bg-white text-gray-700 text-sm text-center py-6 opacity-90 mt-auto border-t border-gray-200">
-      &copy; {new Date().getFullYear()} PayRollPro, All rights reserved &mdash; Professional Payroll & HR Solutions.
-    </footer>
-  </div>
-);
-
-export default PayrollLandingPage;
