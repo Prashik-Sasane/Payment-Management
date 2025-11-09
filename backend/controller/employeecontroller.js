@@ -3,7 +3,7 @@ const db = require("../config/db");
 
 const getAllEmployees = async (req, res) => {
   try {
-    const [employees] = await db.query("SELECT * FROM users");
+    const [employees] = await db.query("SELECT * FROM users WHERE role= 'employee'");
     res.status(200).json(employees);
   } catch (err) {
     console.error(err);

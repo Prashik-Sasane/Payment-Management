@@ -1,8 +1,6 @@
 const db = require("../config/db");
 
-// =========================
-// ✅ Get all Pay Runs
-// =========================
+
 const getAllPayRuns = async (req, res) => {
   try {
     const [rows] = await db.query(`
@@ -27,40 +25,40 @@ const getAllPayRuns = async (req, res) => {
   }
 };
 
-// =========================
-// ✅ Create a new Pay Run
-// =========================
+
 const createPayRun = async (req, res) => {
   const { name, startDate, endDate } = req.body;
-  const userId = req.user?.id || 1; // fallback if auth middleware missing
 
   try {
+    //  Fetch HR name and id where role = 'hr'
+    const [hrRows] = await db.query("SELECT id, name FROM users WHERE role = 'hr' LIMIT 1");
+    if (hrRows.length === 0) {
+      return res.status(400).json({ error: "No HR found in system" });
+    }
+
+    const hr = hrRows[0];
+
+    // 🔹 Insert new pay run using HR info
     const [result] = await db.query(
-      `INSERT INTO pay_runs (name, start_date, end_date, created_by)
-       VALUES (?, ?, ?, ?)`,
-      [name, startDate, endDate, userId]
+      "INSERT INTO pay_runs (name, start_date, end_date, created_by) VALUES (?, ?, ?, ?)",
+      [name, startDate, endDate, hr.id]
     );
 
-    res.status(201).json({
+    res.json({
       id: result.insertId,
       name,
       startDate,
       endDate,
-      totalEmployees: 0,
-      totalAmount: 0.0,
+      createdBy: hr.name,
       status: "Draft",
-      processedDate: null,
-      createdBy: userId,
     });
   } catch (err) {
-    console.error("❌ Error creating pay run:", err);
+    console.error("Error creating pay run:", err);
     res.status(500).json({ error: "Failed to create pay run" });
   }
 };
 
-// =========================
-// ✅ Process a Pay Run
-// =========================
+
 const processPayRun = async (req, res) => {
   const { id } = req.params;
   const { bonusPercent = 0 } = req.body;
@@ -119,9 +117,7 @@ const processPayRun = async (req, res) => {
   }
 };
 
-// =========================
-// ✅ Complete Pay Run
-// =========================
+
 const completePayRun = async (req, res) => {
   const { id } = req.params;
 
@@ -148,13 +144,10 @@ const completePayRun = async (req, res) => {
   }
 };
 
-// =========================
-// ✅ Delete Pay Run
-// =========================
 const deletePayRun = async (req, res) => {
   const { id } = req.params;
   try {
-    // Delete the pay run (cascade deletes transactions)
+  
     const [result] = await db.query("DELETE FROM pay_runs WHERE id = ?", [id]);
     if (result.affectedRows === 0)
       return res.status(404).json({ message: "Pay run not found" });
@@ -166,10 +159,35 @@ const deletePayRun = async (req, res) => {
   }
 };
 
+const getPayrollSummary = async (req, res) => {
+  try {
+    const [rows] = await db.query(`
+      SELECT 
+        MIN(MONTHNAME(pr.start_date)) AS month,
+        SUM(pt.amount + pt.bonus) AS total_net_pay,
+        SUM(pt.bonus) AS total_bonus,
+        SUM(pt.amount * 0.05) AS total_deductions,
+        SUM(pt.tax) AS total_tax
+      FROM pay_runs pr
+      JOIN payroll_transactions pt ON pr.id = pt.pay_run_id
+      WHERE YEAR(pr.start_date) = YEAR(CURDATE())
+      GROUP BY MONTH(pr.start_date)
+      ORDER BY MONTH(pr.start_date)
+    `);
+
+    res.json(rows);
+  } catch (err) {
+    console.error("Error fetching payroll summary:", err);
+    res.status(500).json({ error: "Failed to fetch payroll summary" });
+  }
+};
+
+
 module.exports = {
   getAllPayRuns,
   createPayRun,
   processPayRun,
   completePayRun,
   deletePayRun,
+  getPayrollSummary
 };
