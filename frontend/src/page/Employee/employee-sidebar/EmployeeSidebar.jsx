@@ -16,7 +16,6 @@ function EmployeeSidebar({ user, activeSection, setActiveSection }) {
         Employee Portal
       </h2>
 
-      {/* User Info */}
       <header className="flex justify-between items-center mb-8">
         <div className="flex items-center gap-6">
           <span className="flex items-center gap-2 bg-[#F4F4F6] px-4 py-2 rounded-xl">
@@ -37,7 +36,7 @@ function EmployeeSidebar({ user, activeSection, setActiveSection }) {
         </div>
       </header>
 
-      {/* Sidebar Menu */}
+      
       <nav className="flex-1">
         {sidebarItems.map((item) => (
           <button

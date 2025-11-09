@@ -1,9 +1,8 @@
-
-
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../../api/axios";
 import EmployeeSidebar from "./employee-sidebar/EmployeeSidebar";
+import PayHistory from "./container/PayHistory"
 import { Bar } from "react-chartjs-2";
 import {
   Chart as ChartJS,
@@ -26,7 +25,7 @@ function EmployeeDashboard() {
   // ------------------ STATE ------------------ //
 const [employeeData, setEmployeeData] = useState({
   name: "",
-  id: "", // ✅ changed from employeeId → id (for consistency with backend)
+  id: "", 
   department: "",
   position: "",
   salary: 0,
@@ -299,7 +298,6 @@ const handleProfileUpdate = async (e) => {
                 </div>
               </div>
 
-             
               <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                 <div className="bg-white rounded-xl shadow-md p-6">
                   <h3 className="text-sm font-medium text-gray-600 mb-2">Email</h3>
@@ -325,7 +323,6 @@ const handleProfileUpdate = async (e) => {
                     </div>
                   </div>
 
-                  {/* Bank Details */}
                   <div className="bg-white p-6 rounded-xl shadow-md overflow-y-auto max-h-[360px]">
                     <h2 className="text-lg font-bold mb-3">🏦 Current Salary</h2>
                     {employeeData.bankAccounts.length === 0 ? (
@@ -500,6 +497,10 @@ const handleProfileUpdate = async (e) => {
                 </div>
               </section>
             )}
+
+            {activeSection === "history" && (
+              <PayHistory/>
+              )}
 
             {activeSection === "leave" && (
                   <section>

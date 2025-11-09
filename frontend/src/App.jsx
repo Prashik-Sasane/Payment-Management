@@ -18,10 +18,11 @@ function App() {
     <Router>
       <Routes>
         <Route path="/" element={<LandingPage />} />
+        { /* EMPLOYEE DASHBOARD PAGE */ }
         <Route path="/employee/login" element={<EmployeeLogin />} />
         <Route path="/employee/register" element={<EmployeeRegister />} />
         <Route path="/employee/dashboard" element={<EmployeeDashboard />} />
-
+        
         {/* HR DASHBOARD PAGE */}
         <Route path="/hr/employees" element={<Employees />} />
         <Route path="/hr/tasks" element={<Tasks/>} />

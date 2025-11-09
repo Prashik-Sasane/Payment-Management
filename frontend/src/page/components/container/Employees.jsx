@@ -84,13 +84,13 @@ function Employees() {
 
       <div className="p-6 bg-gray-50 min-h-screen flex-1">
         <div className="mx-auto w-6xl">
-          {/* Header */}
+      
           <div className="mb-6">
             <h1 className="text-3xl font-bold text-gray-900">Employees</h1>
             <p className="text-gray-600 mt-2">Manage your workforce efficiently</p>
           </div>
 
-          {/* Search + Filter + Add */}
+         
           <div className="bg-white p-6 rounded-lg shadow-sm mb-6">
             <div className="flex flex-col md:flex-row gap-4">
               <div className="flex-1 relative">
