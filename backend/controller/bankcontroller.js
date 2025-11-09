@@ -199,6 +199,41 @@ const deleteLeave = async (req, res) => {
 };
 
 
+// Get payroll history for an employee
+const getEmployeePayroll = async (req, res) => {
+  try {
+    const employeeId = req.user?.id;
+
+    if (!employeeId) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+
+    const [rows] = await db.query(`
+      SELECT 
+        pr.name AS pay_run_name,
+        pr.start_date,
+        pr.end_date,
+        pr.status AS pay_run_status,
+        pt.amount,
+        pt.bonus,
+        (pt.amount * 0.05) AS deductions,  -- Example tax or deduction
+        (pt.amount + pt.bonus - (pt.amount * 0.05)) AS net_pay,
+        pt.status AS payment_status,
+        pt.transaction_date
+      FROM payroll_transactions pt
+      JOIN pay_runs pr ON pt.pay_run_id = pr.id
+      WHERE pt.employee_id = ?
+      ORDER BY pr.start_date DESC
+    `, [employeeId]);
+
+    res.json(rows);
+  } catch (err) {
+    console.error("Error fetching employee payroll:", err);
+    res.status(500).json({ error: "Failed to fetch payroll history" });
+  }
+};
+
+
 module.exports = {
   getProfile,
   getBankAccounts,
@@ -210,4 +245,5 @@ module.exports = {
   deleteLeave,
   updateEmployeeProfile,
   getEmployeeDetails,
+  getEmployeePayroll
 };
