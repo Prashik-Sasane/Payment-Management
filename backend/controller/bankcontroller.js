@@ -1,6 +1,6 @@
 const db = require("../config/db");
 
-// ✅ Get Employee Profile
+
 const getProfile = async (req, res) => {
   const userId = req.user.id;
   try {
@@ -19,7 +19,6 @@ const getProfile = async (req, res) => {
   }
 };
 
-// ✅ Update Employee Profile
 const updateEmployeeProfile = async (req, res) => {
   const userId = req.user.id;
   const { name, department, position, salary } = req.body;
@@ -36,7 +35,7 @@ const updateEmployeeProfile = async (req, res) => {
   }
 };
 
-// ✅ Get Bank Accounts
+
 const getBankAccounts = async (req, res) => {
   const userId = req.user.id;
   try {
@@ -51,12 +50,12 @@ const getBankAccounts = async (req, res) => {
   }
 };
 
-// ✅ Get Leave Balance
+
 const getLeaveBalance = async (req, res) => {
   const userId = req.user.id;
   try {
     const [rows] = await db.query(
-      "SELECT leave_type, total_leaves, used_leaves, (total_leaves - used_leaves) AS remaining_leaves FROM employee_leave_balances WHERE user_id = ?",
+      "SELECT leave_type, total_leaves, used_leaves, (total_leaves - used_leaves) AS remaining_leaves FROM employee_leave_balances WHERE id = ?",
       [userId]
     );
     res.json(rows);
@@ -66,12 +65,11 @@ const getLeaveBalance = async (req, res) => {
   }
 };
 
-// ✅ Get Full Employee Details (Overview + Bank + Leave)
+
 const getEmployeeDetails = async (req, res) => {
   const userId = req.user.id;
 
   try {
-    // 1️⃣ Fetch basic profile
     const [userRows] = await db.query(
       "SELECT id, name, email, department, position, salary FROM users WHERE id = ?",
       [userId]
@@ -82,25 +80,21 @@ const getEmployeeDetails = async (req, res) => {
 
     const user = userRows[0];
 
-    // 2️⃣ Fetch bank details
     const [bankAccounts] = await db.query(
       "SELECT bank_name, account_number, ifsc_code, account_holder_name, is_primary FROM employee_bank_accounts WHERE user_id = ?",
       [userId]
     );
 
-    // 3️⃣ Fetch leave balances
     const [leaveBalanceRows] = await db.query(
       "SELECT leave_type, total_leaves, used_leaves, (total_leaves - used_leaves) AS remaining_leaves FROM employee_leave_balances WHERE user_id = ?",
       [userId]
     );
 
-    // 4️⃣ Fetch leave history (approved/rejected/pending)
     const [leaveHistory] = await db.query(
       "SELECT leave_type, start_date, end_date, days, status FROM employee_leave_applications WHERE user_id = ? ORDER BY applied_at DESC",
       [userId]
     );
 
-    // 🧩 Combine all into one response
     res.json({
       ...user,
       bankAccounts,
@@ -113,7 +107,7 @@ const getEmployeeDetails = async (req, res) => {
   }
 };
 
-// ✅ Add Bank Account
+
 const addBankAccount = async (req, res) => {
   const { accountNumber, bankName, ifscCode, accountHolderName } = req.body;
   const userId = req.user.id;
@@ -130,7 +124,29 @@ const addBankAccount = async (req, res) => {
   }
 };
 
-// ✅ Apply Leave
+
+const deleteBankAccount = async (req, res) => {
+  const userId = req.user.id;
+  const { accountId } = req.params;
+
+  try {
+    const [result] = await db.query(
+      "DELETE FROM employee_bank_accounts WHERE id = ? AND user_id = ?",
+      [accountId, userId]
+    );
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ error: "Bank account not found or unauthorized" });
+    }
+
+    res.json({ message: "Bank account deleted successfully!" });
+  } catch (err) {
+    console.error("Error in deleteBankAccount:", err);
+    res.status(500).json({ error: "Server error while deleting bank account" });
+  }
+};
+
+
 const applyLeave = async (req, res) => {
   const { leaveType, startDate, endDate, reason, days } = req.body;
   const userId = req.user.id;
@@ -147,12 +163,51 @@ const applyLeave = async (req, res) => {
   }
 };
 
+const getLeaveHistory = async (req, res) => {
+  const userId = req.user.id;
+  try {
+    const [rows] = await db.query(
+      "SELECT  id, leave_type, start_date, end_date, days, status FROM employee_leave_applications WHERE user_id = ? ORDER BY applied_at DESC",
+      [userId]
+    );
+    res.status(200).json(rows);
+  } catch (err) {
+    console.error("Error in getLeaveHistory:", err);
+    res.status(500).json({ error: "Failed to fetch leave history" });
+  }
+};
+
+const deleteLeave = async (req, res) => {
+  const userId = req.user.id;
+  const { leaveId } = req.params;
+
+  try {
+    const [result] = await db.query(
+      "DELETE FROM employee_leave_applications WHERE id = ? AND user_id = ? AND status = 'PENDING'",
+      [leaveId, userId]
+    );
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ error: "Leave not found or cannot delete" });
+    }
+
+    res.json({ message: "Leave application deleted successfully!" });
+  } catch (err) {
+    console.error("Error in deleteLeave:", err);
+    res.status(500).json({ error: "Server error while deleting leave application" });
+  }
+};
+
+
 module.exports = {
   getProfile,
   getBankAccounts,
   getLeaveBalance,
+  deleteBankAccount,
   addBankAccount,
   applyLeave,
+  getLeaveHistory,
+  deleteLeave,
   updateEmployeeProfile,
   getEmployeeDetails,
 };

@@ -1,10 +1,13 @@
 const express = require("express");
 const router = express.Router();
-const verifyToken = require("../middleware/auth.js");
-const { createPayRun, processPayRun, getPayRuns } = require("../controller/paycontroller.js");
+const {authMiddleware} = require("../middleware/authMiddleware.js");
+const { getAllPayRuns , createPayRun , processPayRun , completePayRun , deletePayRun} = require("../controller/paycontroller.js");
 
-router.get("/", verifyToken, getPayRuns);
-router.post("/process/:id", verifyToken, processPayRun);
-router.post("/create", verifyToken, createPayRun);
+const HRauth = authMiddleware("hr_token");
 
+router.get("/", HRauth, getAllPayRuns);  
+router.post("/create", HRauth, createPayRun);
+router.delete("/:id", HRauth, deletePayRun)
+router.post("/process/:id", HRauth, processPayRun);
+router.put("/complete/:id" , HRauth, completePayRun);
 module.exports = router;

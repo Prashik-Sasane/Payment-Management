@@ -69,7 +69,7 @@ const createHR = async (req, res) => {
 };
 
 
-// ✅ Login HR
+// Login HR
 const loginHR = async (req, res) => {
   const { email, password } = req.body;
   try {
