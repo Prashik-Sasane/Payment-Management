@@ -124,8 +124,6 @@ useEffect(() => {
   fetchEmployeeData();
 }, []);
 
-// ------------------ FORM HANDLERS ------------------ //
-
 const handleBankSubmit = async (e) => {
   e.preventDefault();
   try {

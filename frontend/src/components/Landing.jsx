@@ -1,7 +1,7 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { FaMoneyCheckAlt, FaUsers, FaChartLine } from "react-icons/fa";
+import { FaMoneyCheckAlt, FaUsers, FaChartLine, FaGithub, FaLinkedin, FaEnvelope } from "react-icons/fa";
 
 export default function LandingPage() {
   return (
@@ -116,10 +116,44 @@ export default function LandingPage() {
       </section>
 
       {/* Footer */}
-      <footer className="mt-auto py-6 bg-white text-center text-gray-500 border-t">
-        © {new Date().getFullYear()} PayMaster. All rights reserved.
+      <footer className="mt-auto pt-10 pb-6 bg-white text-gray-600 border-t">
+        <div className="max-w-screen-xl mx-auto px-6 md:px-16">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
+            <div>
+              <h5 className="font-bold text-sky-600 mb-2">PayMaster</h5>
+              <p className="text-sm text-gray-500">Secure, scalable, and intelligent payroll management for modern businesses.</p>
+            </div>
+            <div>
+              <h6 className="font-semibold mb-2">Product</h6>
+              <ul className="space-y-2 text-sm">
+                <li><Link to="/features" className="hover:text-sky-600">Features</Link></li>
+                <li><Link to="/pricing" className="hover:text-sky-600">Pricing</Link></li>
+                <li><Link to="/faq" className="hover:text-sky-600">FAQ</Link></li>
+              </ul>
+            </div>
+            <div>
+              <h6 className="font-semibold mb-2">Company</h6>
+              <ul className="space-y-2 text-sm">
+                <li><Link to="/about" className="hover:text-sky-600">About Us</Link></li>
+                <li><Link to="/careers" className="hover:text-sky-600">Careers</Link></li>
+                <li><Link to="/contact" className="hover:text-sky-600">Contact</Link></li>
+              </ul>
+            </div>
+            <div>
+              <h6 className="font-semibold mb-2">Connect</h6>
+              <div className="flex space-x-4 text-2xl mb-2">
+                <a href="mailto:support@paymaster.com" className="hover:text-sky-600"><FaEnvelope /></a>
+                <a href="https://github.com/" target="_blank" rel="noopener noreferrer" className="hover:text-sky-600"><FaGithub /></a>
+                <a href="https://www.linkedin.com/" target="_blank" rel="noopener noreferrer" className="hover:text-sky-600"><FaLinkedin /></a>
+              </div>
+              <p className="text-xs text-gray-400">Mon–Fri 9am–6pm</p>
+            </div>
+          </div>
+          <div className="border-t pt-4 text-xs text-center text-gray-400">
+            &copy; {new Date().getFullYear()} PayMaster. All rights reserved.
+          </div>
+        </div>
       </footer>
     </div>
   );
 }
-
