@@ -152,9 +152,9 @@ const deletePayRun = async (req, res) => {
     if (result.affectedRows === 0)
       return res.status(404).json({ message: "Pay run not found" });
 
-    res.json({ message: "🗑️ Pay run deleted successfully" });
+    res.json({ message: "Pay run deleted successfully" });
   } catch (err) {
-    console.error("❌ Error deleting pay run:", err);
+    console.error("Error deleting pay run:", err);
     res.status(500).json({ message: "Error deleting pay run" });
   }
 };

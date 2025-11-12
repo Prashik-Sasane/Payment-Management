@@ -47,7 +47,7 @@ const loginEmployee = async (req, res) => {
   }
 };
 
-// ✅ Register HR
+// Register HR
 const createHR = async (req, res) => {
   const { name, email, password, department } = req.body;
   try {
@@ -67,7 +67,6 @@ const createHR = async (req, res) => {
     res.status(500).json({ error: "HR registration failed" });
   }
 };
-
 
 // Login HR
 const loginHR = async (req, res) => {
