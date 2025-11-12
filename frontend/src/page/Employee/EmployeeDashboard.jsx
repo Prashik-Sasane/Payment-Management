@@ -381,7 +381,6 @@ const handleProfileUpdate = async (e) => {
               <section>
                 <h2 className="text-2xl font-bold mb-6">Bank Details</h2>
 
-                {/* Add Bank Form */}
                 <form
                   onSubmit={handleBankSubmit}
                   className="bg-white p-6 rounded-2xl shadow mb-6 max-w-lg"
